@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import UserProfileCard from "@/components/admin/UserProfileCard";
 import MonthlyHoursCard from "@/components/admin/MonthlyHoursCard";
 import TimeRecordsTable from "@/components/admin/TimeRecordsTable";
 import UserDetailsHeader from "@/components/admin/UserDetailsHeader";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
 export interface TimeRecord {
   id: string;
@@ -79,6 +79,21 @@ const UserDetails = () => {
     enabled: !!isAdmin && !!userId,
   });
 
+  // Fetch current user for the header
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
+
+  // Handle logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/admin");
+  };
+
   // Fetch time records
   const { data: timeRecords, isLoading: isTimeRecordsLoading } = useQuery({
     queryKey: ["timeRecords", userId],
@@ -139,24 +154,28 @@ const UserDetails = () => {
 
   // Show the user profile
   return (
-    <div className="container mx-auto py-10 space-y-6">
-      <UserDetailsHeader 
-        username={profile?.username || "Sin nombre de usuario"} 
-        onBack={() => navigate("/admin/dashboard")} 
-      />
+    <div className="min-h-screen bg-background">
+      <DashboardHeader userId={currentUser?.id || null} onLogout={handleLogout} />
+      
+      <div className="container mx-auto py-10 space-y-6">
+        <UserDetailsHeader 
+          username={profile?.username || "Sin nombre de usuario"} 
+          onBack={() => navigate("/admin/dashboard")} 
+        />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {profile && (
-          <UserProfileCard 
-            profile={profile} 
-            userId={userId!} 
-            onProfileUpdate={refetchProfile}
-          />
-        )}
-        {monthlyHours && <MonthlyHoursCard monthlyHours={monthlyHours} />}
+        <div className="grid gap-6 md:grid-cols-2">
+          {profile && (
+            <UserProfileCard 
+              profile={profile} 
+              userId={userId!} 
+              onProfileUpdate={refetchProfile}
+            />
+          )}
+          {monthlyHours && <MonthlyHoursCard monthlyHours={monthlyHours} />}
+        </div>
+
+        {timeRecords && <TimeRecordsTable timeRecords={timeRecords} />}
       </div>
-
-      {timeRecords && <TimeRecordsTable timeRecords={timeRecords} />}
     </div>
   );
 };
