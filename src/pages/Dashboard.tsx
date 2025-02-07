@@ -5,6 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, ClockIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -12,6 +22,10 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeRecord, setActiveRecord] = useState<any>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [customDate, setCustomDate] = useState("");
+  const [customTime, setCustomTime] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [customRecordType, setCustomRecordType] = useState<"in" | "out">("in");
 
   useEffect(() => {
     checkAuth();
@@ -103,6 +117,73 @@ const Dashboard = () => {
     }
   };
 
+  const handleCustomRecord = async () => {
+    if (!userId || !customDate || !customTime) return;
+
+    setIsLoading(true);
+    try {
+      const timestamp = new Date(`${customDate}T${customTime}`).toISOString();
+
+      if (customRecordType === "in") {
+        const { error } = await supabase
+          .from('time_records')
+          .insert({
+            clock_in: timestamp,
+            user_id: userId,
+            is_manual: true
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "¡Registro exitoso!",
+          description: "Has registrado tu entrada personalizada correctamente.",
+        });
+      } else {
+        if (!activeRecord) {
+          throw new Error("No hay un registro de entrada activo");
+        }
+
+        const { error } = await supabase
+          .from('time_records')
+          .update({ 
+            clock_out: timestamp,
+            is_manual: true 
+          })
+          .eq('id', activeRecord.id)
+          .eq('user_id', userId);
+
+        if (error) throw error;
+
+        toast({
+          title: "¡Registro exitoso!",
+          description: "Has registrado tu salida personalizada correctamente.",
+        });
+      }
+
+      setIsDialogOpen(false);
+      setCustomDate("");
+      setCustomTime("");
+      await checkActiveRecord();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ha ocurrido un error al registrar",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openCustomDialog = (type: "in" | "out") => {
+    const now = new Date();
+    setCustomDate(format(now, "yyyy-MM-dd"));
+    setCustomTime(format(now, "HH:mm"));
+    setCustomRecordType(type);
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4">
       <div className="max-w-md mx-auto space-y-8">
@@ -129,14 +210,55 @@ const Dashboard = () => {
               {activeRecord ? "Registrar Salida" : "Registrar Entrada"}
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => {/* TODO: Implement custom time record */}}
-            >
-              Registro Personalizado
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => openCustomDialog(activeRecord ? "out" : "in")}
+                >
+                  Registro Personalizado
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {customRecordType === "in" 
+                      ? "Registro de Entrada Personalizado"
+                      : "Registro de Salida Personalizado"
+                    }
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Fecha</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Hora</Label>
+                    <Input
+                      id="time"
+                      type="time"
+                      value={customTime}
+                      onChange={(e) => setCustomTime(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    className="w-full"
+                    onClick={handleCustomRecord}
+                    disabled={isLoading || !customDate || !customTime}
+                  >
+                    Guardar Registro
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
@@ -145,3 +267,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
