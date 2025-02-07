@@ -66,12 +66,10 @@ const UserDetails = () => {
       if (error) throw error;
       if (!data) return null;
       
-      const transformedData: UserProfile = {
+      return {
         username: data.username,
         user_roles: Array.isArray(data.user_roles) ? data.user_roles : [data.user_roles]
-      };
-      
-      return transformedData;
+      } as UserProfile;
     },
     enabled: !!isAdmin && !!userId,
   });
@@ -112,8 +110,8 @@ const UserDetails = () => {
     );
   }
 
-  // Show error message if profile not found
-  if (profileError || !profile) {
+  // Show error message if profile not found (only if there's an error, not for null username)
+  if (profileError || profile === null) {
     return (
       <div className="container mx-auto py-10 space-y-6">
         <div className="flex items-center gap-4">
@@ -136,7 +134,7 @@ const UserDetails = () => {
   return (
     <div className="container mx-auto py-10 space-y-6">
       <UserDetailsHeader 
-        username={profile.username} 
+        username={profile.username || "Sin nombre de usuario"} 
         onBack={() => navigate("/admin/dashboard")} 
       />
 
@@ -155,4 +153,3 @@ const UserDetails = () => {
 };
 
 export default UserDetails;
-
