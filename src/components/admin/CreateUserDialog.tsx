@@ -27,21 +27,51 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+
+  const validateUsername = async (username: string) => {
+    if (!username) {
+      setUsernameError("El nombre de usuario es requerido");
+      return false;
+    }
+    
+    // Check if username already exists
+    const { data: existingUser, error } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (error) {
+      setUsernameError("Error al verificar el nombre de usuario");
+      return false;
+    }
+
+    if (existingUser) {
+      setUsernameError("Este nombre de usuario ya está en uso");
+      return false;
+    }
+
+    setUsernameError(null);
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // Validate username first
+      const isUsernameValid = await validateUsername(username);
+      if (!isUsernameValid) {
+        setIsLoading(false);
+        return;
+      }
+
       // Create the user in Supabase Auth
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            username,
-          },
-        },
       });
 
       if (signUpError) throw signUpError;
@@ -59,10 +89,8 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       if (isAdmin) {
         const { error: roleError } = await supabase
           .from("user_roles")
-          .insert({
-            user_id: user.id,
-            role: 'admin'
-          });
+          .update({ role: 'admin' })
+          .eq("user_id", user.id);
 
         if (roleError) throw roleError;
       }
@@ -115,9 +143,16 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
               id="username"
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setUsernameError(null);
+              }}
               required
+              className={usernameError ? "border-red-500" : ""}
             />
+            {usernameError && (
+              <p className="text-sm text-red-500">{usernameError}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
