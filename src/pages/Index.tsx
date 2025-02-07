@@ -5,19 +5,77 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // To be implemented with Supabase
-    toast({
-      title: "Inicio de sesión pendiente",
-      description: "La integración con Supabase aún no está implementada.",
-    });
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "¡Bienvenido!",
+          description: "Has iniciado sesión correctamente.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Ha ocurrido un error al iniciar sesión.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "¡Registro exitoso!",
+          description: "Por favor, verifica tu correo electrónico.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Ha ocurrido un error al registrarse.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -33,7 +91,7 @@ const Index = () => {
             Control de Fichaje
           </h2>
           <p className="text-sm text-gray-600">
-            Inicia sesión para registrar tu jornada laboral
+            Inicia sesión o regístrate para comenzar
           </p>
         </div>
 
@@ -51,6 +109,7 @@ const Index = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@empresa.com"
+                disabled={isLoading}
               />
             </div>
 
@@ -66,12 +125,25 @@ const Index = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                disabled={isLoading}
               />
             </div>
 
-            <Button type="submit" className="neo-button w-full">
-              Iniciar sesión
-            </Button>
+            <div className="space-y-4">
+              <Button type="submit" className="neo-button w-full" disabled={isLoading}>
+                {isLoading ? "Cargando..." : "Iniciar sesión"}
+              </Button>
+              
+              <Button 
+                type="button" 
+                variant="outline"
+                className="w-full"
+                onClick={handleSignUp}
+                disabled={isLoading}
+              >
+                Crear cuenta
+              </Button>
+            </div>
           </form>
 
           <div className="text-center">
