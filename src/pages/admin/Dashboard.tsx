@@ -13,8 +13,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import CreateUserDialog from "@/components/admin/CreateUserDialog";
+
+interface UserRole {
+  role: 'admin' | 'user';
+}
+
+interface Profile {
+  id: string;
+  username: string | null;
+  updated_at: string | null;
+  user_roles: UserRole[];
+}
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -50,7 +61,7 @@ const AdminDashboard = () => {
         .select("*, user_roles(role)");
 
       if (error) throw error;
-      return profiles;
+      return profiles as Profile[];
     },
     enabled: !!isAdmin,
   });
