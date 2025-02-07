@@ -52,16 +52,23 @@ const AdminDashboard = () => {
     },
   });
 
-  // Fetch users data
+  // Fetch users data with proper foreign table syntax
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("*, user_roles(role)");
+        .select(`
+          id,
+          username,
+          updated_at,
+          user_roles!inner (
+            role
+          )
+        `);
 
       if (error) throw error;
-      return profiles as Profile[];
+      return profiles as unknown as Profile[];
     },
     enabled: !!isAdmin,
   });
