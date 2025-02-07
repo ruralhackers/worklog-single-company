@@ -200,6 +200,15 @@ const Dashboard = () => {
           </h1>
         </div>
 
+        {activeRecord && (
+          <div className="glass p-4 rounded-lg text-center">
+            <p className="text-gray-600">Hora de entrada:</p>
+            <p className="text-lg font-semibold text-gray-800">
+              {format(new Date(activeRecord.clock_in), "dd/MM/yyyy HH:mm:ss")}
+            </p>
+          </div>
+        )}
+
         <div className="glass p-8 space-y-6">
           <div className="text-center space-y-4">
             <Button
