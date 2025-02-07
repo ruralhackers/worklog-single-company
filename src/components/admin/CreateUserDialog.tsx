@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -25,6 +26,7 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +55,18 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
 
       if (updateError) throw updateError;
 
+      // If admin is selected, update the user_roles table
+      if (isAdmin) {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: user.id,
+            role: 'admin'
+          });
+
+        if (roleError) throw roleError;
+      }
+
       toast({
         title: "Usuario creado",
         description: "El usuario ha sido creado exitosamente",
@@ -62,6 +76,7 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       setEmail("");
       setPassword("");
       setUsername("");
+      setIsAdmin(false);
       onOpenChange(false);
 
       // Refresh users list
@@ -113,6 +128,14 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="admin-mode"
+              checked={isAdmin}
+              onCheckedChange={setIsAdmin}
+            />
+            <Label htmlFor="admin-mode">¿Es administrador?</Label>
           </div>
           <Button
             type="submit"
