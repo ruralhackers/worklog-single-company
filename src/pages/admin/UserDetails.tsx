@@ -21,9 +21,13 @@ interface TimeRecord {
   notes: string | null;
 }
 
+interface UserRole {
+  role: 'admin' | 'user';
+}
+
 interface UserProfile {
   username: string | null;
-  user_roles: { role: string }[];
+  user_roles: UserRole[];
 }
 
 const UserDetails = () => {
@@ -58,13 +62,20 @@ const UserDetails = () => {
         .from("profiles")
         .select(`
           username,
-          user_roles (role)
+          user_roles!inner (role)
         `)
         .eq("id", userId)
         .single();
 
       if (error) throw error;
-      return data as UserProfile;
+      
+      // Transform the data to match our interface
+      const transformedData: UserProfile = {
+        username: data.username,
+        user_roles: Array.isArray(data.user_roles) ? data.user_roles : [data.user_roles]
+      };
+      
+      return transformedData;
     },
     enabled: !!isAdmin && !!userId,
   });
