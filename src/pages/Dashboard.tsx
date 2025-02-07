@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 
 const Dashboard = () => {
@@ -29,6 +31,7 @@ const Dashboard = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState("");
   const [customTime, setCustomTime] = useState("");
+  const [customNotes, setCustomNotes] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customRecordType, setCustomRecordType] = useState<"in" | "out">("in");
 
@@ -85,7 +88,7 @@ const Dashboard = () => {
           .from('time_records')
           .update({ 
             clock_out: new Date().toISOString(),
-            user_id: userId  // Ensure user_id is included
+            user_id: userId
           })
           .eq('id', activeRecord.id);
 
@@ -137,7 +140,8 @@ const Dashboard = () => {
           .insert({
             clock_in: timestamp,
             user_id: userId,
-            is_manual: true
+            is_manual: true,
+            notes: customNotes || null
           });
 
         if (error) throw error;
@@ -156,7 +160,8 @@ const Dashboard = () => {
           .update({ 
             clock_out: timestamp,
             is_manual: true,
-            user_id: userId  // Ensure user_id is included
+            notes: customNotes || null,
+            user_id: userId
           })
           .eq('id', activeRecord.id);
 
@@ -171,6 +176,7 @@ const Dashboard = () => {
       setIsDialogOpen(false);
       setCustomDate("");
       setCustomTime("");
+      setCustomNotes("");
       await checkActiveRecord();
     } catch (error: any) {
       toast({
@@ -187,6 +193,7 @@ const Dashboard = () => {
     const now = new Date();
     setCustomDate(format(now, "yyyy-MM-dd"));
     setCustomTime(format(now, "HH:mm"));
+    setCustomNotes("");
     setCustomRecordType(type);
     setIsDialogOpen(true);
   };
@@ -302,6 +309,16 @@ const Dashboard = () => {
                       onChange={(e) => setCustomTime(e.target.value)}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notas (opcional)</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Añade notas o comentarios..."
+                      value={customNotes}
+                      onChange={(e) => setCustomNotes(e.target.value)}
+                      className="resize-none"
+                    />
+                  </div>
                   <Button 
                     className="w-full"
                     onClick={handleCustomRecord}
@@ -320,3 +337,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
