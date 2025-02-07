@@ -6,14 +6,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Index = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,32 +24,6 @@ const Index = () => {
     if (session) {
       navigate('/dashboard');
     }
-  };
-
-  const validateUsername = async (username: string) => {
-    if (!username) {
-      setUsernameError("El nombre de usuario es requerido");
-      return false;
-    }
-    
-    const { data: existingUser, error } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("username", username)
-      .maybeSingle();
-
-    if (error) {
-      setUsernameError("Error al verificar el nombre de usuario");
-      return false;
-    }
-
-    if (existingUser) {
-      setUsernameError("Este nombre de usuario ya está en uso");
-      return false;
-    }
-
-    setUsernameError(null);
-    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,58 +60,6 @@ const Index = () => {
     }
   };
 
-  const handleSignUp = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Validate username first
-      const isUsernameValid = await validateUsername(username);
-      if (!isUsernameValid) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { data: { user }, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!user) {
-        throw new Error("No se pudo crear el usuario");
-      }
-
-      // Update the username in the profiles table
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ username })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "¡Registro exitoso!",
-        description: "Por favor, verifica tu correo electrónico.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Ha ocurrido un error al registrarse.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8 animate-fade-in">
@@ -153,7 +73,7 @@ const Index = () => {
             Control de Fichaje
           </h2>
           <p className="text-sm text-gray-600">
-            Inicia sesión o regístrate para comenzar
+            Inicia sesión para comenzar
           </p>
         </div>
 
@@ -173,28 +93,6 @@ const Index = () => {
                 placeholder="tu@empresa.com"
                 disabled={isLoading}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                Nombre de usuario
-              </Label>
-              <Input
-                id="username"
-                type="text"
-                required
-                className={`input-field w-full ${usernameError ? "border-red-500" : ""}`}
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setUsernameError(null);
-                }}
-                placeholder="tunombredeusuario"
-                disabled={isLoading}
-              />
-              {usernameError && (
-                <p className="text-sm text-red-500">{usernameError}</p>
-              )}
             </div>
 
             <div className="space-y-2">
@@ -218,15 +116,15 @@ const Index = () => {
                 {isLoading ? "Cargando..." : "Iniciar sesión"}
               </Button>
               
-              <Button 
-                type="button" 
-                variant="outline"
-                className="w-full"
-                onClick={handleSignUp}
-                disabled={isLoading}
-              >
-                Crear cuenta
-              </Button>
+              <Link to="/signup">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  className="w-full"
+                >
+                  Crear cuenta nueva
+                </Button>
+              </Link>
             </div>
           </form>
 
