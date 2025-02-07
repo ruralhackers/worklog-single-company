@@ -52,7 +52,7 @@ const AdminDashboard = () => {
     },
   });
 
-  // Fetch users data with proper foreign table syntax
+  // Fetch users data with proper join syntax
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
           id,
           username,
           updated_at,
-          user_roles!inner (
+          user_roles (
             role
           )
         `);

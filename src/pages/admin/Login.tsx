@@ -44,7 +44,8 @@ const AdminLogin = () => {
         description: "Has iniciado sesión correctamente.",
       });
 
-      navigate("/dashboard");
+      // Fixed: Redirect to admin dashboard instead of regular dashboard
+      navigate("/admin/dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
