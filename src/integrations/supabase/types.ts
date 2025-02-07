@@ -94,6 +94,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_email: {
+        Args: {
+          admin_uid: string
+          target_user_id: string
+        }
+        Returns: string
+      }
       is_admin: {
         Args: {
           user_uid: string

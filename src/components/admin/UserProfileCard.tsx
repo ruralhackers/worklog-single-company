@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/pages/admin/UserDetails";
+import { useQuery } from "@tanstack/react-query";
 
 interface UserProfileCardProps {
   profile: UserProfile;
@@ -21,6 +22,31 @@ const UserProfileCard = ({ profile, userId, onProfileUpdate }: UserProfileCardPr
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Fetch current user email
+  const { data: currentEmail } = useQuery({
+    queryKey: ["userEmail", userId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      const { data, error } = await supabase.rpc('get_user_email', {
+        admin_uid: user.id,
+        target_user_id: userId
+      });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Reset form when toggling edit mode
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+    setEmail("");
+    setPassword("");
+    setUsername(profile.username || "");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +108,7 @@ const UserProfileCard = ({ profile, userId, onProfileUpdate }: UserProfileCardPr
         <CardTitle>Información del Usuario</CardTitle>
         <Button
           variant="ghost"
-          onClick={() => setIsEditing(!isEditing)}
+          onClick={handleEditToggle}
           disabled={isLoading}
         >
           {isEditing ? "Cancelar" : "Editar"}
@@ -94,6 +120,10 @@ const UserProfileCard = ({ profile, userId, onProfileUpdate }: UserProfileCardPr
             <div>
               <dt className="text-sm font-medium text-gray-500">Nombre de usuario</dt>
               <dd>{profile.username || "Sin nombre de usuario"}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Correo electrónico</dt>
+              <dd>{currentEmail || "Cargando..."}</dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Rol</dt>
@@ -119,7 +149,7 @@ const UserProfileCard = ({ profile, userId, onProfileUpdate }: UserProfileCardPr
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nuevo@correo.com"
+                placeholder={currentEmail || "nuevo@correo.com"}
                 disabled={isLoading}
               />
             </div>
@@ -150,4 +180,3 @@ const UserProfileCard = ({ profile, userId, onProfileUpdate }: UserProfileCardPr
 };
 
 export default UserProfileCard;
-
