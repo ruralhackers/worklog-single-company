@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserPlus } from "lucide-react";
+import { UserPlus, ExternalLink } from "lucide-react";
 import CreateUserDialog from "@/components/admin/CreateUserDialog";
 
 interface UserRole {
@@ -98,6 +98,7 @@ const AdminDashboard = () => {
               <TableHead>Usuario</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Última actualización</TableHead>
+              <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,6 +114,18 @@ const AdminDashboard = () => {
                   {user.updated_at
                     ? new Date(user.updated_at).toLocaleDateString()
                     : "No disponible"}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to={`/admin/dashboard/user/${user.id}`}>
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Ver detalles
+                    </Link>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
