@@ -116,15 +116,17 @@ const Index = () => {
                 {isLoading ? "Cargando..." : "Iniciar sesión"}
               </Button>
               
-              <Link to="/signup">
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  className="w-full"
-                >
-                  Crear cuenta nueva
-                </Button>
-              </Link>
+              <div className="mt-6">
+                <Link to="/signup">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Crear cuenta nueva
+                  </Button>
+                </Link>
+              </div>
             </div>
           </form>
 
