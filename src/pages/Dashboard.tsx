@@ -1,27 +1,12 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ClockIcon, LogOut } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { ClockControl } from "@/components/dashboard/ClockControl";
+import { CustomRecordDialog } from "@/components/dashboard/CustomRecordDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -217,124 +202,30 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-gray-900">Panel de Control</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                  <span className="text-primary-foreground text-sm">
-                    {userId?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Cerrar Sesión
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      <div className="max-w-md mx-auto space-y-8 p-4">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <div className="glass p-4 rounded-full">
-              <Clock className="w-8 h-8 text-gray-700" />
-            </div>
-          </div>
-        </div>
-
-        {activeRecord && (
-          <div className="glass p-4 rounded-lg text-center">
-            <p className="text-gray-600">Hora de entrada:</p>
-            <p className="text-lg font-semibold text-gray-800">
-              {format(new Date(activeRecord.clock_in), "dd/MM/yyyy HH:mm:ss")}
-            </p>
-          </div>
-        )}
-
-        <div className="glass p-8 space-y-6">
-          <div className="text-center space-y-4">
-            <Button
-              size="lg"
-              className="w-full text-lg h-16"
-              onClick={handleClockAction}
-              disabled={isLoading}
-            >
-              <ClockIcon className="mr-2" />
-              {activeRecord ? "Registrar Salida" : "Registrar Entrada"}
-            </Button>
-
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => openCustomDialog(activeRecord ? "out" : "in")}
-                >
-                  Registro Personalizado
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {customRecordType === "in" 
-                      ? "Registro de Entrada Personalizado"
-                      : "Registro de Salida Personalizado"
-                    }
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Fecha</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={customDate}
-                      onChange={(e) => setCustomDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="time">Hora</Label>
-                    <Input
-                      id="time"
-                      type="time"
-                      value={customTime}
-                      onChange={(e) => setCustomTime(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notas (opcional)</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Añade notas o comentarios..."
-                      value={customNotes}
-                      onChange={(e) => setCustomNotes(e.target.value)}
-                      className="resize-none"
-                    />
-                  </div>
-                  <Button 
-                    className="w-full"
-                    onClick={handleCustomRecord}
-                    disabled={isLoading || !customDate || !customTime}
-                  >
-                    Guardar Registro
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader userId={userId} onLogout={handleLogout} />
+      <ClockControl
+        activeRecord={activeRecord}
+        isLoading={isLoading}
+        onClockAction={handleClockAction}
+        CustomRecordDialog={
+          <CustomRecordDialog
+            isOpen={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            customDate={customDate}
+            customTime={customTime}
+            customNotes={customNotes}
+            isLoading={isLoading}
+            recordType={activeRecord ? "out" : "in"}
+            onDateChange={setCustomDate}
+            onTimeChange={setCustomTime}
+            onNotesChange={setCustomNotes}
+            onSubmit={handleCustomRecord}
+            onCustomDialogOpen={openCustomDialog}
+          />
+        }
+      />
     </div>
   );
 };
 
 export default Dashboard;
-
