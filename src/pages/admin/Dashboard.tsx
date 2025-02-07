@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { UserPlus, ExternalLink } from "lucide-react";
 import CreateUserDialog from "@/components/admin/CreateUserDialog";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
 interface UserRole {
   role: 'admin' | 'user';
@@ -33,22 +34,22 @@ const AdminDashboard = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // Verify admin status on component mount
-  const { data: isAdmin } = useQuery({
-    queryKey: ["isAdmin"],
+  const { data: user } = useQuery({
+    queryKey: ["currentUser"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate("/admin");
-        return false;
+        return null;
       }
       const { data: isAdmin } = await supabase.rpc("is_admin", {
         user_uid: user.id,
       });
       if (!isAdmin) {
         navigate("/admin");
-        return false;
+        return null;
       }
-      return true;
+      return user;
     },
   });
 
@@ -70,10 +71,15 @@ const AdminDashboard = () => {
       if (error) throw error;
       return profiles as unknown as Profile[];
     },
-    enabled: !!isAdmin,
+    enabled: !!user,
   });
 
-  if (!isAdmin || isLoading) {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/admin");
+  };
+
+  if (!user || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900" />
@@ -82,61 +88,65 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto py-10 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Panel de Administración</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Crear nuevo usuario
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background">
+      <DashboardHeader userId={user.id} onLogout={handleLogout} />
+      
+      <div className="container mx-auto py-10 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Panel de Administración</h1>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Crear nuevo usuario
+          </Button>
+        </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Última actualización</TableHead>
-              <TableHead>Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users?.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">
-                  {user.username || "Sin nombre de usuario"}
-                </TableCell>
-                <TableCell>
-                  {user.user_roles?.[0]?.role || "usuario"}
-                </TableCell>
-                <TableCell>
-                  {user.updated_at
-                    ? new Date(user.updated_at).toLocaleDateString()
-                    : "No disponible"}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                  >
-                    <Link to={`/admin/dashboard/user/${user.id}`}>
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Ver detalles
-                    </Link>
-                  </Button>
-                </TableCell>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Usuario</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Última actualización</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {users?.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">
+                    {user.username || "Sin nombre de usuario"}
+                  </TableCell>
+                  <TableCell>
+                    {user.user_roles?.[0]?.role || "usuario"}
+                  </TableCell>
+                  <TableCell>
+                    {user.updated_at
+                      ? new Date(user.updated_at).toLocaleDateString()
+                      : "No disponible"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to={`/admin/dashboard/user/${user.id}`}>
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        Ver detalles
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
-      <CreateUserDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
+        <CreateUserDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+        />
+      </div>
     </div>
   );
 };
