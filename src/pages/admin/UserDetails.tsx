@@ -55,7 +55,7 @@ const UserDetails = () => {
   });
 
   // Fetch user profile
-  const { data: profile } = useQuery({
+  const { data: profile, error: profileError } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -65,9 +65,10 @@ const UserDetails = () => {
           user_roles!inner (role)
         `)
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) return null;
       
       // Transform the data to match our interface
       const transformedData: UserProfile = {
@@ -116,6 +117,27 @@ const UserDetails = () => {
     );
   }
 
+  // Show error message if profile not found
+  if (profileError || !profile) {
+    return (
+      <div className="container mx-auto py-10 space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              Usuario no encontrado o sin permisos necesarios
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-10 space-y-6">
       <div className="flex items-center gap-4">
@@ -124,7 +146,7 @@ const UserDetails = () => {
           Volver
         </Button>
         <h1 className="text-2xl font-bold">
-          Detalles del Usuario: {profile?.username || "Sin nombre de usuario"}
+          Detalles del Usuario: {profile.username || "Sin nombre de usuario"}
         </h1>
       </div>
 
@@ -137,11 +159,11 @@ const UserDetails = () => {
             <dl className="space-y-2">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Nombre de usuario</dt>
-                <dd>{profile?.username || "Sin nombre de usuario"}</dd>
+                <dd>{profile.username || "Sin nombre de usuario"}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Rol</dt>
-                <dd>{profile?.user_roles?.[0]?.role || "usuario"}</dd>
+                <dd>{profile.user_roles?.[0]?.role || "usuario"}</dd>
               </div>
             </dl>
           </CardContent>
