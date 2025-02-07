@@ -51,7 +51,7 @@ const UserDetails = () => {
   });
 
   // Fetch user profile
-  const { data: profile, error: profileError } = useQuery({
+  const { data: profile, error: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -141,7 +141,11 @@ const UserDetails = () => {
       />
 
       <div className="grid gap-6 md:grid-cols-2">
-        <UserProfileCard profile={profile} />
+        <UserProfileCard 
+          profile={profile} 
+          userId={userId!} 
+          onProfileUpdate={refetchProfile}
+        />
         {monthlyHours && <MonthlyHoursCard monthlyHours={monthlyHours} />}
       </div>
 
@@ -151,3 +155,4 @@ const UserDetails = () => {
 };
 
 export default UserDetails;
+

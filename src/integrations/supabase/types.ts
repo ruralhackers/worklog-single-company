@@ -100,6 +100,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_user_credentials: {
+        Args: {
+          admin_uid: string
+          target_user_id: string
+          new_email?: string
+          new_password?: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "admin" | "user"
