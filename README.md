@@ -1,3 +1,4 @@
+
 # Welcome to your Lovable project
 
 A time tracking application built with React, TypeScript, and Supabase.
@@ -20,200 +21,107 @@ Before you begin, ensure you have:
 - Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 - A Supabase account - [Sign up here](https://supabase.com)
 
-## Deployment Steps
+## Supabase Setup
 
 1. **Create a Supabase Project**
    - Go to [Supabase Dashboard](https://app.supabase.com)
    - Click "New Project" and follow the setup wizard
    - Save your project URL and anon key for later
 
-2. **Set Up Database Schema**
-   - In your Supabase project, go to the SQL editor
-   - Copy and paste the following SQL commands:
+2. **Database Schema**
+   The application uses the following tables:
 
-```sql
--- Create user roles enum
-CREATE TYPE user_role AS ENUM ('admin', 'user');
+   ```sql
+   -- User roles enum
+   CREATE TYPE user_role AS ENUM ('admin', 'user');
 
--- Create profiles table
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
-  username TEXT,
-  avatar_url TEXT,
-  updated_at TIMESTAMP WITH TIME ZONE
-);
+   -- Profiles table - stores user profile information
+   CREATE TABLE profiles (
+     id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
+     username TEXT,
+     avatar_url TEXT,
+     updated_at TIMESTAMP WITH TIME ZONE
+   );
 
--- Create time records table
-CREATE TABLE time_records (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  clock_in TIMESTAMP WITH TIME ZONE NOT NULL,
-  clock_out TIMESTAMP WITH TIME ZONE,
-  is_manual BOOLEAN DEFAULT false,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+   -- Time records table - stores user time entries
+   CREATE TABLE time_records (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     user_id UUID NOT NULL,
+     clock_in TIMESTAMP WITH TIME ZONE NOT NULL,
+     clock_out TIMESTAMP WITH TIME ZONE,
+     is_manual BOOLEAN DEFAULT false,
+     notes TEXT,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+   );
 
--- Create user roles table
-CREATE TABLE user_roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  role user_role NOT NULL DEFAULT 'user',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Create function to check if user is admin
-CREATE OR REPLACE FUNCTION is_admin(user_uid UUID)
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.user_roles
-    WHERE user_id = user_uid
-    AND role = 'admin'::user_role
-  );
-$$;
-
--- Create function to handle new user creation
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-begin
-  -- Create the profile
-  INSERT INTO public.profiles (id)
-  VALUES (new.id);
-  
-  -- Create default user role
-  INSERT INTO public.user_roles (user_id, role)
-  VALUES (new.id, 'user');
-  
-  RETURN new;
-end;
-$$;
-
--- Create trigger for new user creation
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
-```
-
-3. **Clone and Configure**
-```sh
-# Clone the repository
-git clone <YOUR_GIT_URL>
-
-# Navigate to project directory
-cd <YOUR_PROJECT_NAME>
-
-# Install dependencies
-npm install
-```
-
-4. **Configure Supabase**
-   - Update the Supabase configuration in `src/integrations/supabase/client.ts` with your project URL and anon key
-   - Or use environment variables if deploying to a platform that supports them
-
-5. **Build and Deploy**
-
-There are several ways to deploy your application:
-
-**Deploy with Netlify:**
-1. Create a Netlify account at [netlify.com](https://netlify.com)
-2. Connect your GitHub repository
-3. Configure build settings:
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-4. Add environment variables:
-   - `VITE_SUPABASE_URL`: Your Supabase project URL
-   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
-5. Deploy!
-
-**Deploy with Vercel:**
-1. Create a Vercel account at [vercel.com](https://vercel.com)
-2. Import your GitHub repository
-3. Configure build settings:
-   - Framework Preset: Vite
-   - Build command: `npm run build`
-   - Output directory: `dist`
-4. Add environment variables:
-   - `VITE_SUPABASE_URL`: Your Supabase project URL
-   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
-5. Deploy!
-
-**Deploy with GitHub Pages:**
-1. In your repository settings, enable GitHub Pages
-2. Add this to your `vite.config.ts`:
-   ```ts
-   export default defineConfig({
-     base: '/<repository-name>/',
-     // ... other config
-   })
-   ```
-3. Add a GitHub Action workflow:
-   ```yaml
-   name: Deploy to GitHub Pages
-
-   on:
-     push:
-       branches: [ main ]
-
-   jobs:
-     build-and-deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v2
-         - name: Install Dependencies
-           run: npm install
-         - name: Build
-           run: npm run build
-         - name: Deploy to GitHub Pages
-           uses: JamesIves/github-pages-deploy-action@4.1.1
-           with:
-             branch: gh-pages
-             folder: dist
+   -- User roles table - manages user permissions
+   CREATE TABLE user_roles (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     user_id UUID NOT NULL,
+     role user_role NOT NULL DEFAULT 'user',
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+   );
    ```
 
-## Development
+3. **Database Functions**
+   The application uses several database functions for secure operations:
 
-To run the project locally:
+   - `is_admin(user_uid UUID)`: Checks if a user has admin privileges
+   - `handle_new_user()`: Automatically creates profile and role entries for new users
+   - `get_user_email(admin_uid UUID, target_user_id UUID)`: Allows admins to fetch user emails
+   - `update_user_credentials(admin_uid UUID, target_user_id UUID, new_email TEXT, new_password TEXT)`: Allows admins to update user credentials
 
-```sh
-# Install dependencies
-npm install
+4. **Triggers**
+   - `on_auth_user_created`: Automatically sets up new user profiles and roles
 
-# Start development server
-npm run dev
-```
+## Environment Setup
 
-The app will be available at `http://localhost:8080`
+1. **Configure Supabase Client**
+   Update the environment variables in your project:
+   ```
+   VITE_SUPABASE_URL=your_project_url
+   VITE_SUPABASE_ANON_KEY=your_anon_key
+   ```
 
-## Customization
+2. **Development**
+   ```sh
+   # Install dependencies
+   npm install
 
-You can customize the application by:
-- Modifying the UI components in `src/components`
-- Updating the styling using Tailwind CSS classes
-- Adding new features through the Supabase backend
+   # Start development server
+   npm run dev
+   ```
+
+## Features
+
+### Authentication
+- Email/password signup and login
+- Admin/User role management
+- Secure credential management
+
+### Time Tracking
+- Clock in/out functionality
+- Manual time entry support
+- Notes for time records
+- Monthly hours summary
+
+### Admin Dashboard
+- User management
+- User profile editing
+- Time record viewing
+- Monthly hours reporting
 
 ## Contributing
 
-This project is open source. To contribute:
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to your branch
-5. Create a Pull Request
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## Support
 
-If you need help:
-- Check the [Issues](https://github.com/yourusername/yourrepo/issues) section
-- Create a new issue if you find a bug
-- Reach out to the maintainers
+For support, please open an issue in the GitHub repository or contact the maintainers.
 
 ## License
 
