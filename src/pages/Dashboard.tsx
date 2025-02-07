@@ -78,9 +78,11 @@ const Dashboard = () => {
         // Clock out
         const { error } = await supabase
           .from('time_records')
-          .update({ clock_out: new Date().toISOString() })
-          .eq('id', activeRecord.id)
-          .eq('user_id', userId);
+          .update({ 
+            clock_out: new Date().toISOString(),
+            user_id: userId  // Ensure user_id is included
+          })
+          .eq('id', activeRecord.id);
 
         if (error) throw error;
 
@@ -148,10 +150,10 @@ const Dashboard = () => {
           .from('time_records')
           .update({ 
             clock_out: timestamp,
-            is_manual: true 
+            is_manual: true,
+            user_id: userId  // Ensure user_id is included
           })
-          .eq('id', activeRecord.id)
-          .eq('user_id', userId);
+          .eq('id', activeRecord.id);
 
         if (error) throw error;
 
@@ -267,4 +269,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
