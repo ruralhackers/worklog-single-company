@@ -64,6 +64,8 @@ const UserDetails = () => {
         .maybeSingle();
 
       if (error) throw error;
+      
+      // If no data was found, return null
       if (!data) return null;
       
       return {
@@ -111,28 +113,8 @@ const UserDetails = () => {
     );
   }
 
-  // Show error message if profile not found or error occurred
-  if (profileError || profile === null) {
-    return (
-      <div className="container mx-auto py-10 space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
-        </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-red-600">
-              Usuario no encontrado o sin permisos necesarios
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!profile) {
+  // Show error message if there was an error fetching the profile
+  if (profileError) {
     return (
       <div className="container mx-auto py-10 space-y-6">
         <div className="flex items-center gap-4">
@@ -152,6 +134,28 @@ const UserDetails = () => {
     );
   }
 
+  // Show error message if no profile was found
+  if (profile === null) {
+    return (
+      <div className="container mx-auto py-10 space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              Usuario no encontrado
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show the user profile even if username is null
   return (
     <div className="container mx-auto py-10 space-y-6">
       <UserDetailsHeader 
