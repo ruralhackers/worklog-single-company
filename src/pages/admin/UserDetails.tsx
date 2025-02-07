@@ -50,24 +50,30 @@ const UserDetails = () => {
     },
   });
 
-  // Fetch user profile
+  // Fetch user profile with a left join
   const { data: profile, error: profileError, isLoading: isProfileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the profile
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select(`
-          username,
-          user_roles!inner (role)
-        `)
+        .select("username")
         .eq("id", userId)
         .single();
 
-      if (error) throw error;
-      
+      if (profileError) throw profileError;
+
+      // Then get the roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      if (rolesError) throw rolesError;
+
       return {
-        username: data?.username,
-        user_roles: Array.isArray(data?.user_roles) ? data.user_roles : [data.user_roles]
+        username: profileData?.username,
+        user_roles: rolesData || []
       } as UserProfile;
     },
     enabled: !!isAdmin && !!userId,
