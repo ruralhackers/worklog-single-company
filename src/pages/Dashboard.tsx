@@ -11,23 +11,34 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [activeRecord, setActiveRecord] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
-    checkActiveRecord();
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      checkActiveRecord();
+    }
+  }, [userId]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate('/');
+      return;
     }
+    setUserId(session.user.id);
   };
 
   const checkActiveRecord = async () => {
+    if (!userId) return;
+
     const { data: records, error } = await supabase
       .from('time_records')
       .select('*')
+      .eq('user_id', userId)
       .is('clock_out', null)
       .order('clock_in', { ascending: false })
       .limit(1);
@@ -45,6 +56,8 @@ const Dashboard = () => {
   };
 
   const handleClockAction = async () => {
+    if (!userId) return;
+
     setIsLoading(true);
     try {
       if (activeRecord) {
@@ -52,7 +65,8 @@ const Dashboard = () => {
         const { error } = await supabase
           .from('time_records')
           .update({ clock_out: new Date().toISOString() })
-          .eq('id', activeRecord.id);
+          .eq('id', activeRecord.id)
+          .eq('user_id', userId);
 
         if (error) throw error;
 
@@ -64,11 +78,10 @@ const Dashboard = () => {
         // Clock in
         const { error } = await supabase
           .from('time_records')
-          .insert([
-            {
-              clock_in: new Date().toISOString(),
-            },
-          ]);
+          .insert({
+            clock_in: new Date().toISOString(),
+            user_id: userId
+          });
 
         if (error) throw error;
 
