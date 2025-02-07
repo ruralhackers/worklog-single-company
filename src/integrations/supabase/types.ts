@@ -30,6 +30,36 @@ export type Database = {
         }
         Relationships: []
       }
+      time_records: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string | null
+          id: string
+          is_manual: boolean | null
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          clock_in: string
+          clock_out?: string | null
+          created_at?: string | null
+          id?: string
+          is_manual?: boolean | null
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string | null
+          id?: string
+          is_manual?: boolean | null
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
