@@ -31,7 +31,7 @@ const UserDetails = () => {
   const navigate = useNavigate();
 
   // Verify admin status
-  const { data: isAdmin } = useQuery({
+  const { data: isAdmin, isLoading: isAdminLoading } = useQuery({
     queryKey: ["isAdmin"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +51,7 @@ const UserDetails = () => {
   });
 
   // Fetch user profile
-  const { data: profile, error: profileError, refetch: refetchProfile } = useQuery({
+  const { data: profile, error: profileError, isLoading: isProfileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -75,7 +75,7 @@ const UserDetails = () => {
   });
 
   // Fetch time records
-  const { data: timeRecords } = useQuery({
+  const { data: timeRecords, isLoading: isTimeRecordsLoading } = useQuery({
     queryKey: ["timeRecords", userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -102,7 +102,8 @@ const UserDetails = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  if (!isAdmin) {
+  // Show loading state while checking admin status or loading profile
+  if (isAdminLoading || isProfileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900" />
@@ -110,7 +111,7 @@ const UserDetails = () => {
     );
   }
 
-  // Show error message if profile not found (only if there's an error, not for null username)
+  // Show error message if profile not found or error occurred
   if (profileError || profile === null) {
     return (
       <div className="container mx-auto py-10 space-y-6">
@@ -124,6 +125,26 @@ const UserDetails = () => {
           <CardContent className="pt-6">
             <div className="text-center text-red-600">
               Usuario no encontrado o sin permisos necesarios
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto py-10 space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              Error al cargar el perfil del usuario
             </div>
           </CardContent>
         </Card>
