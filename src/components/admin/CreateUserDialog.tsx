@@ -71,38 +71,28 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            username: username // Add username to user metadata
+          }
+        }
       });
 
       if (signUpError) throw signUpError;
       if (!user) throw new Error("No se pudo crear el usuario");
 
-      // Wait a bit longer for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // First check if the profile exists
-      const { data: profile } = await supabase
+      // Create profile directly instead of waiting for trigger
+      const { error: profileError } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!profile) {
-        // If profile doesn't exist yet, wait a bit more and try again
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      // Update the profile with the username
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ 
-          username,
+        .insert({
+          id: user.id,
+          username: username,
           updated_at: new Date().toISOString()
-        })
-        .eq("id", user.id);
+        });
 
-      if (updateError) {
-        console.error('Error updating profile:', updateError);
-        throw new Error("Error al actualizar el perfil del usuario");
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        throw new Error("Error al crear el perfil del usuario");
       }
 
       // If admin is selected, update the user_roles table
