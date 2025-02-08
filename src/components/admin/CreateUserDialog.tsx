@@ -72,11 +72,6 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            username: username, // Add username to user metadata
-          },
-        },
       });
 
       if (signUpError) throw signUpError;
@@ -85,10 +80,10 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       // Wait a moment for the trigger to create the profile
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Update the username in the profiles table
+      // Update the profile with the username
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ username })
+        .update({ username, updated_at: new Date().toISOString() })
         .eq("id", user.id);
 
       if (updateError) throw updateError;
@@ -118,6 +113,7 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       // Refresh users list
       queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (error: any) {
+      console.error('Error creating user:', error);
       toast({
         title: "Error",
         description: error.message || "Ha ocurrido un error al crear el usuario",
@@ -194,4 +190,3 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
 };
 
 export default CreateUserDialog;
-
