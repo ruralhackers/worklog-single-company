@@ -71,31 +71,27 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            username: username // Add username to user metadata
-          }
-        }
       });
 
       if (signUpError) throw signUpError;
       if (!user) throw new Error("No se pudo crear el usuario");
 
-      // Create profile directly instead of waiting for trigger
+      // Get the current admin's session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No hay sesión de administrador");
+
+      // Create or update profile with admin's session
       const { error: profileError } = await supabase
         .from("profiles")
-        .insert({
-          id: user.id,
-          username: username,
-          updated_at: new Date().toISOString()
-        });
+        .update({ username })
+        .eq("id", user.id);
 
       if (profileError) {
-        console.error('Error creating profile:', profileError);
-        throw new Error("Error al crear el perfil del usuario");
+        console.error('Error updating profile:', profileError);
+        throw new Error("Error al actualizar el perfil del usuario");
       }
 
-      // If admin is selected, update the user_roles table
+      // If admin is selected, create admin role
       if (isAdmin) {
         const { error: roleError } = await supabase
           .from("user_roles")
