@@ -35,7 +35,6 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       return false;
     }
     
-    // Check if username already exists
     const { data: existingUser, error } = await supabase
       .from("profiles")
       .select("username")
@@ -77,16 +76,34 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       if (signUpError) throw signUpError;
       if (!user) throw new Error("No se pudo crear el usuario");
 
-      // Wait a moment for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait a bit longer for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // First check if the profile exists
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        // If profile doesn't exist yet, wait a bit more and try again
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
 
       // Update the profile with the username
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ username, updated_at: new Date().toISOString() })
+        .update({ 
+          username,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating profile:', updateError);
+        throw new Error("Error al actualizar el perfil del usuario");
+      }
 
       // If admin is selected, update the user_roles table
       if (isAdmin) {
