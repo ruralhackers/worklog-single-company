@@ -102,6 +102,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_admins: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string
+          has_admin_role: boolean
+        }[]
+      }
       get_user_email: {
         Args: {
           admin_uid: string
