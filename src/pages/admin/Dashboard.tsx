@@ -33,14 +33,6 @@ interface Profile {
   time_records: TimeRecordCount[];
 }
 
-interface ProfileResponse {
-  id: string;
-  username: string | null;
-  updated_at: string | null;
-  user_roles: UserRole[];
-  time_records: TimeRecordCount[];
-}
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,7 +59,7 @@ const AdminDashboard = () => {
   });
 
   // Fetch users data with proper join syntax and count of time records
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading } = useQuery<Profile[]>({
     queryKey: ["users"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
@@ -85,7 +77,7 @@ const AdminDashboard = () => {
         throw error;
       }
 
-      return (profiles as ProfileResponse[]) as Profile[];
+      return profiles;
     },
     enabled: !!user,
   });
