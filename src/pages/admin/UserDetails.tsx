@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import MonthlyHoursCard from "@/components/admin/MonthlyHoursCard";
 import TimeRecordsTable from "@/components/admin/TimeRecordsTable";
 import UserDetailsHeader from "@/components/admin/UserDetailsHeader";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { useToast } from "@/hooks/use-toast";
 
 export interface TimeRecord {
   id: string;
@@ -29,6 +31,7 @@ export interface UserProfile {
 const UserDetails = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Verify admin status
   const { data: isAdmin, isLoading: isAdminLoading } = useQuery({
@@ -94,10 +97,11 @@ const UserDetails = () => {
     navigate("/admin");
   };
 
-  // Fetch time records
-  const { data: timeRecords, isLoading: isTimeRecordsLoading } = useQuery({
+  // Fetch time records with error handling
+  const { data: timeRecords, isLoading: isTimeRecordsLoading, error: timeRecordsError } = useQuery({
     queryKey: ["timeRecords", userId],
     queryFn: async () => {
+      console.log("Fetching time records for user:", userId);
       const { data, error } = await supabase
         .from("time_records")
         .select("*")
@@ -105,7 +109,17 @@ const UserDetails = () => {
         .order("clock_in", { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching time records:", error);
+        toast({
+          title: "Error al cargar registros",
+          description: "No se pudieron cargar los registros de tiempo.",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      console.log("Time records fetched:", data);
       return data as TimeRecord[];
     },
     enabled: !!isAdmin && !!userId,
@@ -132,7 +146,7 @@ const UserDetails = () => {
   }
 
   // Show error message if there was an error fetching the profile
-  if (profileError) {
+  if (profileError || timeRecordsError) {
     return (
       <div className="container mx-auto py-10 space-y-6">
         <div className="flex items-center gap-4">
@@ -144,7 +158,7 @@ const UserDetails = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-red-600">
-              Error al cargar el perfil del usuario
+              Error al cargar los datos del usuario
             </div>
           </CardContent>
         </Card>
@@ -174,7 +188,12 @@ const UserDetails = () => {
           {monthlyHours && <MonthlyHoursCard monthlyHours={monthlyHours} />}
         </div>
 
-        {timeRecords && <TimeRecordsTable timeRecords={timeRecords} />}
+        {timeRecords && (
+          <TimeRecordsTable 
+            timeRecords={timeRecords} 
+            username={profile?.username}
+          />
+        )}
       </div>
     </div>
   );
