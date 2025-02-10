@@ -21,12 +21,24 @@ interface UserRole {
   role: 'admin' | 'user';
 }
 
+interface TimeRecordCount {
+  count: number;
+}
+
 interface Profile {
   id: string;
   username: string | null;
   updated_at: string | null;
   user_roles: UserRole[];
-  time_records: { count: number }[];
+  time_records: TimeRecordCount[];
+}
+
+interface ProfileResponse {
+  id: string;
+  username: string | null;
+  updated_at: string | null;
+  user_roles: UserRole[];
+  time_records: TimeRecordCount[];
 }
 
 const AdminDashboard = () => {
@@ -73,7 +85,7 @@ const AdminDashboard = () => {
         throw error;
       }
 
-      return profiles as Profile[];
+      return (profiles as ProfileResponse[]) as Profile[];
     },
     enabled: !!user,
   });
