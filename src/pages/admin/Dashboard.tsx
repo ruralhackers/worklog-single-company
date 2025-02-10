@@ -26,7 +26,7 @@ interface Profile {
   username: string | null;
   updated_at: string | null;
   user_roles: UserRole[];
-  time_records_count: number;
+  time_records: { count: number }[];
 }
 
 const AdminDashboard = () => {
@@ -64,19 +64,16 @@ const AdminDashboard = () => {
           id,
           username,
           updated_at,
-          user_roles (
-            role
-          ),
-          time_records:time_records(count)
+          user_roles (role),
+          time_records (count)
         `);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        throw error;
+      }
 
-      // Transform the data to include the count
-      return profiles.map((profile: any) => ({
-        ...profile,
-        time_records_count: profile.time_records[0].count
-      })) as Profile[];
+      return profiles as Profile[];
     },
     enabled: !!user,
   });
@@ -128,7 +125,7 @@ const AdminDashboard = () => {
                     {user.user_roles?.[0]?.role || "usuario"}
                   </TableCell>
                   <TableCell>
-                    {user.time_records_count}
+                    {user.time_records?.[0]?.count || 0}
                   </TableCell>
                   <TableCell>
                     {user.updated_at
