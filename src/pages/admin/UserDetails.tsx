@@ -57,6 +57,7 @@ const UserDetails = () => {
   const { data: profile, error: profileError, isLoading: isProfileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: async () => {
+      console.log("Fetching profile for user:", userId);
       // First get the profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -64,7 +65,10 @@ const UserDetails = () => {
         .eq("id", userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
+      }
 
       // Then get the roles
       const { data: rolesData, error: rolesError } = await supabase
@@ -72,7 +76,10 @@ const UserDetails = () => {
         .select("role")
         .eq("user_id", userId);
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error("Error fetching roles:", rolesError);
+        throw rolesError;
+      }
 
       return {
         username: profileData?.username,
@@ -102,12 +109,13 @@ const UserDetails = () => {
     queryKey: ["timeRecords", userId],
     queryFn: async () => {
       console.log("Fetching time records for user:", userId);
+      if (!userId) throw new Error("No user ID provided");
+
       const { data, error } = await supabase
         .from("time_records")
         .select("*")
         .eq("user_id", userId)
-        .order("clock_in", { ascending: false })
-        .limit(50);
+        .order("clock_in", { ascending: false });
 
       if (error) {
         console.error("Error fetching time records:", error);
@@ -127,10 +135,10 @@ const UserDetails = () => {
 
   // Calculate monthly hours
   const monthlyHours = timeRecords?.reduce((acc, record) => {
+    if (!record.clock_in || !record.clock_out) return acc;
+    
     const month = new Date(record.clock_in).toLocaleString('default', { month: 'long', year: 'numeric' });
-    const hours = record.clock_out 
-      ? (new Date(record.clock_out).getTime() - new Date(record.clock_in).getTime()) / (1000 * 60 * 60)
-      : 0;
+    const hours = (new Date(record.clock_out).getTime() - new Date(record.clock_in).getTime()) / (1000 * 60 * 60);
     
     acc[month] = (acc[month] || 0) + hours;
     return acc;
@@ -185,14 +193,24 @@ const UserDetails = () => {
               onProfileUpdate={refetchProfile}
             />
           )}
-          {monthlyHours && <MonthlyHoursCard monthlyHours={monthlyHours} />}
+          {monthlyHours && Object.keys(monthlyHours).length > 0 && (
+            <MonthlyHoursCard monthlyHours={monthlyHours} />
+          )}
         </div>
 
-        {timeRecords && (
+        {timeRecords && timeRecords.length > 0 ? (
           <TimeRecordsTable 
             timeRecords={timeRecords} 
             username={profile?.username}
           />
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center text-gray-500">
+                No hay registros de tiempo para este usuario
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
