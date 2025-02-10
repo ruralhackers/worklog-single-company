@@ -26,6 +26,7 @@ interface Profile {
   username: string | null;
   updated_at: string | null;
   user_roles: UserRole[];
+  time_records_count: number;
 }
 
 const AdminDashboard = () => {
@@ -53,7 +54,7 @@ const AdminDashboard = () => {
     },
   });
 
-  // Fetch users data with proper join syntax
+  // Fetch users data with proper join syntax and count of time records
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
@@ -65,11 +66,17 @@ const AdminDashboard = () => {
           updated_at,
           user_roles (
             role
-          )
+          ),
+          time_records:time_records(count)
         `);
 
       if (error) throw error;
-      return profiles as unknown as Profile[];
+
+      // Transform the data to include the count
+      return profiles.map((profile: any) => ({
+        ...profile,
+        time_records_count: profile.time_records[0].count
+      })) as Profile[];
     },
     enabled: !!user,
   });
@@ -106,6 +113,7 @@ const AdminDashboard = () => {
               <TableRow>
                 <TableHead>Usuario</TableHead>
                 <TableHead>Rol</TableHead>
+                <TableHead>Registros de tiempo</TableHead>
                 <TableHead>Última actualización</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
@@ -118,6 +126,9 @@ const AdminDashboard = () => {
                   </TableCell>
                   <TableCell>
                     {user.user_roles?.[0]?.role || "usuario"}
+                  </TableCell>
+                  <TableCell>
+                    {user.time_records_count}
                   </TableCell>
                   <TableCell>
                     {user.updated_at
