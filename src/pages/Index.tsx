@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 
 const Index = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -31,15 +31,27 @@ const Index = () => {
     setIsLoading(true);
     
     try {
+      // First, get the user's email using their username
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .single();
+
+      if (profileError) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Now sign in with the credentials
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: username, // Supabase will check both email and username
         password,
       });
 
       if (error) {
         toast({
           title: "Error",
-          description: error.message,
+          description: "Usuario o contraseña incorrectos",
           variant: "destructive",
         });
       } else {
@@ -49,10 +61,10 @@ const Index = () => {
         });
         navigate('/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Ha ocurrido un error al iniciar sesión.",
+        description: error.message || "Ha ocurrido un error al iniciar sesión.",
         variant: "destructive",
       });
     } finally {
@@ -80,17 +92,17 @@ const Index = () => {
         <div className="glass p-8 space-y-6 animate-slide-in">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Correo electrónico
+              <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                Nombre de usuario
               </Label>
               <Input
-                id="email"
-                type="email"
+                id="username"
+                type="text"
                 required
                 className="input-field w-full"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@empresa.com"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="usuario"
                 disabled={isLoading}
               />
             </div>
