@@ -162,7 +162,6 @@ TO authenticated
 USING (is_admin(auth.uid()))
 WITH CHECK (is_admin(auth.uid()));
 
-
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins have full access to profiles"
@@ -192,6 +191,12 @@ TO authenticated
 USING (id = auth.uid())
 WITH CHECK (id = auth.uid());
 
+
+CREATE POLICY "Anonymous users can check profiles for login"
+ON public.profiles
+FOR SELECT
+TO anon
+USING (true);
 
 
 CREATE OR REPLACE FUNCTION public.is_admin(user_uid uuid)

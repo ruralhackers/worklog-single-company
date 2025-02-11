@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -15,7 +14,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { userId, username, checkAuth, fetchUsername, handleLogout } = useUserProfile();
   const { isLoading, activeRecord, checkActiveRecord, handleClockAction, handleCustomRecord } = useTimeRecords(userId);
-  
+
   const [customDate, setCustomDate] = useState("");
   const [customTime, setCustomTime] = useState("");
   const [customNotes, setCustomNotes] = useState("");
@@ -95,9 +94,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="flex-1 flex flex-col bg-gradient-to-b from-gray-50 to-gray-100">
       <DashboardHeader userId={userId} onLogout={handleLogout} />
-      <div className="container mx-auto pt-8 space-y-8 pb-8">
+      <div className="flex-1 container mx-auto pt-8 space-y-8 pb-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="glass p-4 rounded-full">
@@ -156,7 +155,7 @@ const Dashboard = () => {
                       {format(new Date(record.clock_in), "HH:mm")}
                     </TableCell>
                     <TableCell>
-                      {record.clock_out 
+                      {record.clock_out
                         ? format(new Date(record.clock_out), "HH:mm")
                         : "En curso"}
                     </TableCell>
