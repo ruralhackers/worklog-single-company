@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +13,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeRecord, setActiveRecord] = useState<any>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>("");
   const [customDate, setCustomDate] = useState("");
   const [customTime, setCustomTime] = useState("");
   const [customNotes, setCustomNotes] = useState("");
@@ -27,8 +27,23 @@ const Dashboard = () => {
   useEffect(() => {
     if (userId) {
       checkActiveRecord();
+      fetchUsername();
     }
   }, [userId]);
+
+  const fetchUsername = async () => {
+    if (!userId) return;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single();
+    
+    if (data?.username) {
+      setUsername(data.username);
+    }
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -200,30 +215,43 @@ const Dashboard = () => {
     }
   };
 
+  const getWelcomeMessage = () => {
+    if (activeRecord) {
+      const clockInTime = format(new Date(activeRecord.clock_in), "HH:mm");
+      return `Hola ${username || "usuario"}, has entrado a trabajar a las ${clockInTime}. Puedes registrar tu salida aquí`;
+    }
+    return `Hola ${username || "usuario"}, puedes registrar tu entrada aquí`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <DashboardHeader userId={userId} onLogout={handleLogout} />
-      <ClockControl
-        activeRecord={activeRecord}
-        isLoading={isLoading}
-        onClockAction={handleClockAction}
-        CustomRecordDialog={
-          <CustomRecordDialog
-            isOpen={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
-            customDate={customDate}
-            customTime={customTime}
-            customNotes={customNotes}
-            isLoading={isLoading}
-            recordType={activeRecord ? "out" : "in"}
-            onDateChange={setCustomDate}
-            onTimeChange={setCustomTime}
-            onNotesChange={setCustomNotes}
-            onSubmit={handleCustomRecord}
-            onCustomDialogOpen={openCustomDialog}
-          />
-        }
-      />
+      <div className="container mx-auto pt-8">
+        <h2 className="text-center text-xl text-gray-700 mb-8">
+          {getWelcomeMessage()}
+        </h2>
+        <ClockControl
+          activeRecord={activeRecord}
+          isLoading={isLoading}
+          onClockAction={handleClockAction}
+          CustomRecordDialog={
+            <CustomRecordDialog
+              isOpen={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+              customDate={customDate}
+              customTime={customTime}
+              customNotes={customNotes}
+              isLoading={isLoading}
+              recordType={activeRecord ? "out" : "in"}
+              onDateChange={setCustomDate}
+              onTimeChange={setCustomTime}
+              onNotesChange={setCustomNotes}
+              onSubmit={handleCustomRecord}
+              onCustomDialogOpen={openCustomDialog}
+            />
+          }
+        />
+      </div>
     </div>
   );
 };
