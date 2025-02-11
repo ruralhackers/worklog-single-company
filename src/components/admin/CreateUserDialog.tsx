@@ -62,7 +62,6 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       return false;
     }
 
-    // Validación básica de formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailError("El formato del email no es válido");
@@ -119,23 +118,14 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       if (signUpError) throw signUpError;
       if (!user) throw new Error("No se pudo crear el usuario");
 
-      // Update profile with username and email
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ username, email })
-        .eq("id", user.id);
-
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
-        throw new Error("Error al actualizar el perfil del usuario");
-      }
-
       // If admin is selected, create admin role
       if (isAdmin) {
         const { error: roleError } = await supabase
           .from("user_roles")
-          .update({ role: 'admin' })
-          .eq("user_id", user.id);
+          .upsert([{ 
+            user_id: user.id,
+            role: 'admin'
+          }]);
 
         if (roleError) throw roleError;
       }
