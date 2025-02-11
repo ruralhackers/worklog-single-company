@@ -59,7 +59,7 @@ const UserDetails = () => {
 
   // Calculate monthly hours
   const getMonthlyHours = () => {
-    if (!timeRecords) return {};
+    if (!timeRecords || timeRecords.length === 0) return {};
     
     return timeRecords.reduce((acc, record) => {
       if (!record.clock_in || !record.clock_out) return acc;
@@ -67,7 +67,10 @@ const UserDetails = () => {
       const month = new Date(record.clock_in).toLocaleString('default', { month: 'long', year: 'numeric' });
       const hours = (new Date(record.clock_out).getTime() - new Date(record.clock_in).getTime()) / (1000 * 60 * 60);
       
-      acc[month] = (acc[month] || 0) + hours;
+      if (!isNaN(hours) && hours > 0) {
+        acc[month] = (acc[month] || 0) + hours;
+      }
+      
       return acc;
     }, {} as Record<string, number>);
   };
@@ -102,9 +105,7 @@ const UserDetails = () => {
               onProfileUpdate={refetchProfile}
             />
           )}
-          {monthlyHours && Object.keys(monthlyHours).length > 0 && (
-            <MonthlyHoursCard monthlyHours={monthlyHours} />
-          )}
+          <MonthlyHoursCard monthlyHours={monthlyHours} />
         </div>
 
         {!isTimeRecordsLoading && (
@@ -129,3 +130,4 @@ const UserDetails = () => {
 };
 
 export default UserDetails;
+
