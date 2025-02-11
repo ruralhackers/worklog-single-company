@@ -15,8 +15,18 @@ const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Detectar si estamos en entorno de prueba
+  const isTestEnvironment = supabase.supabaseUrl.includes("supabase.co");
+
   useEffect(() => {
     checkAuth();
+    
+    if (isTestEnvironment) {
+      toast({
+        title: "🔬 Entorno de Prueba",
+        description: "Esta es una versión de prueba. Los datos no se guardarán permanentemente.",
+      });
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -70,10 +80,17 @@ const Index = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "¡Bienvenido!",
-          description: "Has iniciado sesión correctamente.",
-        });
+        if (isTestEnvironment) {
+          toast({
+            title: "✨ Inicio de sesión exitoso",
+            description: "Recuerda que estás en el entorno de prueba",
+          });
+        } else {
+          toast({
+            title: "¡Bienvenido!",
+            description: "Has iniciado sesión correctamente.",
+          });
+        }
         navigate('/dashboard');
       }
     } catch (error: any) {
@@ -103,6 +120,16 @@ const Index = () => {
           <p className="text-sm text-gray-600">
             Inicia sesión para comenzar
           </p>
+          {isTestEnvironment && (
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-700">
+                🔬 Estás usando la versión de prueba
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                Los datos se borrarán periódicamente
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="glass p-8 space-y-6 animate-slide-in">
@@ -159,3 +186,4 @@ const Index = () => {
 };
 
 export default Index;
+
