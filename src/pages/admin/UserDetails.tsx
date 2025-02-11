@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import UserProfileCard from "@/components/admin/UserProfileCard";
@@ -105,7 +104,11 @@ const UserDetails = () => {
               onProfileUpdate={refetchProfile}
             />
           )}
-          <MonthlyHoursCard monthlyHours={monthlyHours} />
+          <MonthlyHoursCard 
+            monthlyHours={monthlyHours} 
+            timeRecords={timeRecords || []}
+            username={profile?.username}
+          />
         </div>
 
         {!isTimeRecordsLoading && (

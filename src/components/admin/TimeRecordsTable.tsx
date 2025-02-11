@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -192,15 +191,6 @@ const TimeRecordsTable = ({ timeRecords, username, onRecordsChange }: TimeRecord
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>Últimos Registros</CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportToExcel}
-          className="flex items-center gap-2"
-        >
-          <Download className="h-4 w-4" />
-          Exportar
-        </Button>
       </CardHeader>
       <CardContent>
         <Table>
