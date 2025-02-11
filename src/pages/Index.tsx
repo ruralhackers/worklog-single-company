@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [username, setUsername] = useState("");
@@ -123,23 +123,9 @@ const Index = () => {
               />
             </div>
 
-            <div className="space-y-4">
-              <Button type="submit" className="neo-button w-full" disabled={isLoading}>
-                {isLoading ? "Cargando..." : "Iniciar sesión"}
-              </Button>
-              
-              <div className="mt-6">
-                <Link to="/signup">
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Crear cuenta nueva
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            <Button type="submit" className="neo-button w-full" disabled={isLoading}>
+              {isLoading ? "Cargando..." : "Iniciar sesión"}
+            </Button>
           </form>
 
           <div className="text-center">
