@@ -66,18 +66,18 @@ const AdminDashboard = () => {
     },
   });
 
-  // Fetch users data with proper join syntax and count of time records
+  // Fetch users data with proper join syntax
   const { data: users, isLoading } = useQuery<Profile[]>({
     queryKey: ["users"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
+      const { data: profiles, error } = await supabase
+        .from('profiles')
         .select(`
           id,
           username,
           updated_at,
-          user_roles (role),
-          time_records (count)
+          user_roles:user_roles(role),
+          time_records:time_records(count)
         `);
 
       if (error) {
@@ -85,13 +85,7 @@ const AdminDashboard = () => {
         throw error;
       }
 
-      // Transform the data to match our Profile interface
-      const profiles = data as unknown as DatabaseProfile[];
-      return profiles.map(profile => ({
-        ...profile,
-        user_roles: profile.user_roles,
-        time_records: profile.time_records
-      }));
+      return profiles as Profile[];
     },
     enabled: !!user,
   });
@@ -178,3 +172,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
