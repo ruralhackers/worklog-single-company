@@ -34,7 +34,7 @@ const Index = () => {
       // First, get the user's email using their username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, email')  // Also select email from the profiles table
+        .select('id, email')
         .eq('username', username)
         .maybeSingle();
 
@@ -44,7 +44,7 @@ const Index = () => {
 
       // Now sign in with the email and password
       const { error } = await supabase.auth.signInWithPassword({
-        email: profileData.email, // Use the actual email from profiles
+        email: profileData.email,
         password,
       });
 
