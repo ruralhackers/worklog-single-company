@@ -33,14 +33,6 @@ interface Profile {
   time_records: TimeRecordCount[];
 }
 
-interface DatabaseProfile {
-  id: string;
-  username: string | null;
-  updated_at: string | null;
-  user_roles: { role: 'admin' | 'user' }[];
-  time_records: { count: number }[];
-}
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -70,22 +62,36 @@ const AdminDashboard = () => {
   const { data: users, isLoading } = useQuery<Profile[]>({
     queryKey: ["users"],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
+      // Primero obtenemos los perfiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          username,
-          updated_at,
-          user_roles:user_roles(role),
-          time_records:time_records(count)
-        `);
+        .select('id, username, updated_at');
 
-      if (error) {
-        console.error('Error fetching profiles:', error);
-        throw error;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
       }
 
-      return profiles as Profile[];
+      // Para cada perfil, obtenemos sus roles y registros de tiempo
+      const profilesWithData = await Promise.all(profiles.map(async (profile) => {
+        const { data: userRoles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', profile.id);
+
+        const { data: timeRecords } = await supabase
+          .from('time_records')
+          .select('id')
+          .eq('user_id', profile.id);
+
+        return {
+          ...profile,
+          user_roles: userRoles || [],
+          time_records: [{ count: timeRecords?.length || 0 }]
+        };
+      }));
+
+      return profilesWithData as Profile[];
     },
     enabled: !!user,
   });
