@@ -16,11 +16,11 @@ const Index = () => {
   const navigate = useNavigate();
 
   // Detectar si estamos en entorno de prueba usando la URL del proyecto
-  const isTestEnvironment = import.meta.env.MODE !== 'production';
+  const isTestEnvironment = import.meta.env.VITE_MODE !== 'production';
 
   useEffect(() => {
     checkAuth();
-    
+
     if (isTestEnvironment) {
       toast({
         title: "🔬 Entorno de Prueba",
