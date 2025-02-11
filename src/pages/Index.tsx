@@ -34,17 +34,17 @@ const Index = () => {
       // First, get the user's email using their username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, email')  // Also select email from the profiles table
         .eq('username', username)
-        .single();
+        .maybeSingle();
 
-      if (profileError) {
+      if (profileError || !profileData?.email) {
         throw new Error('Usuario no encontrado');
       }
 
-      // Now sign in with the credentials
+      // Now sign in with the email and password
       const { error } = await supabase.auth.signInWithPassword({
-        email: username, // Supabase will check both email and username
+        email: profileData.email, // Use the actual email from profiles
         password,
       });
 
