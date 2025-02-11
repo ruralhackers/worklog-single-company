@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -94,9 +95,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <DashboardHeader userId={userId} onLogout={handleLogout} />
-      <div className="flex-1 container mx-auto pt-8 space-y-8 pb-8">
+      <div className="container mx-auto pt-8 space-y-8 pb-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="glass p-4 rounded-full">
