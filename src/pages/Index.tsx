@@ -31,6 +31,8 @@ const Index = () => {
     setIsLoading(true);
     
     try {
+      console.log("Buscando usuario con username:", username);
+      
       // First, get the user's email using their username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -38,9 +40,19 @@ const Index = () => {
         .eq('username', username)
         .maybeSingle();
 
-      if (profileError || !profileData?.email) {
+      console.log("Resultado de la búsqueda:", { profileData, profileError });
+
+      if (profileError) {
+        console.error("Error al buscar el perfil:", profileError);
+        throw new Error('Error al buscar el usuario');
+      }
+
+      if (!profileData?.email) {
+        console.error("No se encontró el usuario con username:", username);
         throw new Error('Usuario no encontrado');
       }
+
+      console.log("Intentando login con email:", profileData.email);
 
       // Now sign in with the email and password
       const { error } = await supabase.auth.signInWithPassword({
@@ -49,6 +61,7 @@ const Index = () => {
       });
 
       if (error) {
+        console.error("Error en login:", error);
         toast({
           title: "Error",
           description: "Usuario o contraseña incorrectos",
