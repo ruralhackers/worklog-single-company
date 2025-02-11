@@ -100,12 +100,10 @@ La aplicación puede desplegarse en cualquier servicio que soporte aplicaciones 
 
 Para crear el primer usuario administrador:
 
-1. Registra un usuario normal
-2. Usa el SQL Editor de Supabase para asignarle el rol de admin:
-   ```sql
-   INSERT INTO user_roles (user_id, role)
-   VALUES ('ID_DEL_USUARIO', 'admin');
-   ```
+1. Registra un usuario normal a través de la aplicación
+2. Sigue las instrucciones en [create-admin.md](docs/create-admin.md) para asignar el rol de administrador
+   - Este proceso solo es necesario para el primer administrador
+   - Una vez que tengas un administrador, podrás gestionar otros usuarios desde la interfaz de la aplicación
 
 ## Características de Seguridad
 
@@ -124,3 +122,4 @@ Para soporte, por favor:
 ## Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
