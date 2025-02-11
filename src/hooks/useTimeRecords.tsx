@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -116,8 +117,8 @@ export const useTimeRecords = (userId: string | null) => {
           description: "Has registrado tu entrada personalizada correctamente.",
         });
       } else {
-        // Para salida personalizada, buscamos el último registro sin salida
-        const { data: lastRecord } = await supabase
+        // Para salida personalizada, primero verificamos si hay un registro activo
+        const { data: activeRecords } = await supabase
           .from('time_records')
           .select('*')
           .eq('user_id', userId)
@@ -125,30 +126,31 @@ export const useTimeRecords = (userId: string | null) => {
           .order('clock_in', { ascending: false })
           .limit(1);
 
-        // Si hay un registro activo, actualizamos su salida
-        if (lastRecord && lastRecord.length > 0) {
-          const clockIn = new Date(lastRecord[0].clock_in);
+        if (activeRecords && activeRecords.length > 0) {
+          // Si hay un registro activo, actualizamos su salida
+          const activeRecord = activeRecords[0];
+          const clockIn = new Date(activeRecord.clock_in);
+          
           if (timestamp <= clockIn) {
             throw new Error("La hora de salida debe ser posterior a la hora de entrada");
           }
 
           const { error } = await supabase
             .from('time_records')
-            .update({ 
+            .update({
               clock_out: timestamp.toISOString(),
               is_manual: true,
               notes: customNotes || null
             })
-            .eq('id', lastRecord[0].id)
-            .is('clock_out', null);
+            .eq('id', activeRecord.id);
 
           if (error) throw error;
         } else {
-          // Si no hay registro activo, creamos uno nuevo con salida
+          // Si no hay registro activo, creamos uno nuevo con entrada y salida
           const { error } = await supabase
             .from('time_records')
             .insert({
-              clock_in: timestamp.toISOString(), // Usamos la misma hora como entrada
+              clock_in: timestamp.toISOString(),
               clock_out: timestamp.toISOString(),
               user_id: userId,
               is_manual: true,
