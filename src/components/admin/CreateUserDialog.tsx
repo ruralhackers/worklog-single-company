@@ -24,9 +24,11 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const validateUsername = async (username: string) => {
     if (!username) {
@@ -54,21 +56,58 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
     return true;
   };
 
+  const validateEmail = async (email: string) => {
+    if (!email) {
+      setEmailError("El email es requerido");
+      return false;
+    }
+
+    // Validación básica de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("El formato del email no es válido");
+      return false;
+    }
+
+    const { data: existingEmail, error } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      setEmailError("Error al verificar el email");
+      return false;
+    }
+
+    if (existingEmail) {
+      setEmailError("Este email ya está en uso");
+      return false;
+    }
+
+    setEmailError(null);
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Validate username first
-      const isUsernameValid = await validateUsername(username);
-      if (!isUsernameValid) {
+      // Validate username and email first
+      const [isUsernameValid, isEmailValid] = await Promise.all([
+        validateUsername(username),
+        validateEmail(email)
+      ]);
+
+      if (!isUsernameValid || !isEmailValid) {
         setIsLoading(false);
         return;
       }
 
-      // Create the user in Supabase Auth with username
+      // Create the user in Supabase Auth
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-        email: `${username}@example.com`,
+        email,
         password,
         options: {
           data: {
@@ -80,14 +119,10 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       if (signUpError) throw signUpError;
       if (!user) throw new Error("No se pudo crear el usuario");
 
-      // Get the current admin's session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No hay sesión de administrador");
-
-      // Create or update profile with admin's session
+      // Update profile with username and email
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ username })
+        .update({ username, email })
         .eq("id", user.id);
 
       if (profileError) {
@@ -112,6 +147,7 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
 
       // Reset form and close dialog
       setUsername("");
+      setEmail("");
       setPassword("");
       setIsAdmin(false);
       onOpenChange(false);
@@ -154,6 +190,25 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
               <p className="text-sm text-red-500">{usernameError}</p>
             )}
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError(null);
+              }}
+              required
+              className={emailError ? "border-red-500" : ""}
+            />
+            {emailError && (
+              <p className="text-sm text-red-500">{emailError}</p>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
             <Input
@@ -164,6 +219,7 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
               required
             />
           </div>
+
           <div className="flex items-center space-x-2">
             <Switch
               id="admin-mode"
@@ -172,6 +228,7 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
             />
             <Label htmlFor="admin-mode">¿Es administrador?</Label>
           </div>
+
           <Button
             type="submit"
             className="w-full"
