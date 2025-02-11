@@ -31,7 +31,7 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      console.log("Buscando usuario con username:", username);
+      console.log("1. Intentando login con username:", username);
       
       // First, get the user's email using their username
       const { data: profileData, error: profileError } = await supabase
@@ -40,28 +40,30 @@ const Index = () => {
         .eq('username', username)
         .maybeSingle();
 
-      console.log("Resultado de la búsqueda:", { profileData, profileError });
+      console.log("2. Resultado búsqueda de perfil:", { profileData, profileError });
 
       if (profileError) {
-        console.error("Error al buscar el perfil:", profileError);
+        console.error("3. Error al buscar el perfil:", profileError);
         throw new Error('Error al buscar el usuario');
       }
 
       if (!profileData?.email) {
-        console.error("No se encontró el usuario con username:", username);
+        console.error("4. No se encontró el email para el username:", username);
         throw new Error('Usuario no encontrado');
       }
 
-      console.log("Intentando login con email:", profileData.email);
+      console.log("5. Intentando login con email:", profileData.email);
 
       // Now sign in with the email and password
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: profileData.email,
         password,
       });
 
+      console.log("6. Resultado del login:", { data, error });
+
       if (error) {
-        console.error("Error en login:", error);
+        console.error("7. Error en login:", error);
         toast({
           title: "Error",
           description: "Usuario o contraseña incorrectos",
@@ -75,6 +77,7 @@ const Index = () => {
         navigate('/dashboard');
       }
     } catch (error: any) {
+      console.error("8. Error general:", error);
       toast({
         title: "Error",
         description: error.message || "Ha ocurrido un error al iniciar sesión.",
