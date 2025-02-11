@@ -126,7 +126,10 @@ const Index = () => {
                 🔬 Estás usando la versión de prueba
               </p>
               <p className="text-xs text-yellow-600 mt-1">
-                Los datos se borrarán periódicamente
+                Usuario de prueba: <span className="font-medium">john</span>
+              </p>
+              <p className="text-xs text-yellow-600">
+                Contraseña: <span className="font-medium">123456</span>
               </p>
             </div>
           )}
