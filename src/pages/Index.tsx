@@ -15,8 +15,8 @@ const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Detectar si estamos en entorno de prueba
-  const isTestEnvironment = supabase.supabaseUrl.includes("supabase.co");
+  // Detectar si estamos en entorno de prueba usando la URL del proyecto
+  const isTestEnvironment = process.env.NODE_ENV !== 'production';
 
   useEffect(() => {
     checkAuth();
@@ -186,4 +186,3 @@ const Index = () => {
 };
 
 export default Index;
-
