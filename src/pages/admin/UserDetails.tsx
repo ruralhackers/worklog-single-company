@@ -49,7 +49,7 @@ const UserDetails = () => {
   const { data: currentUser } = useCurrentUser();
 
   // Fetch time records
-  const { data: timeRecords, isLoading: isTimeRecordsLoading } = useTimeRecords(userId, isAdmin);
+  const { data: timeRecords, isLoading: isTimeRecordsLoading, refetch: refetchTimeRecords } = useTimeRecords(userId, isAdmin);
 
   // Handle logout
   const handleLogout = async () => {
@@ -109,10 +109,11 @@ const UserDetails = () => {
         </div>
 
         {!isTimeRecordsLoading && (
-          timeRecords && timeRecords.length > 0 ? (
+          timeRecords ? (
             <TimeRecordsTable 
               timeRecords={timeRecords} 
               username={profile?.username}
+              onRecordsChange={refetchTimeRecords}
             />
           ) : (
             <Card>
@@ -130,4 +131,3 @@ const UserDetails = () => {
 };
 
 export default UserDetails;
-
