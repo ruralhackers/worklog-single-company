@@ -86,7 +86,8 @@ const AdminDashboard = () => {
       }
 
       // Transform the data to match our Profile interface
-      return (data as DatabaseProfile[]).map(profile => ({
+      const profiles = data as unknown as DatabaseProfile[];
+      return profiles.map(profile => ({
         ...profile,
         user_roles: profile.user_roles,
         time_records: profile.time_records
