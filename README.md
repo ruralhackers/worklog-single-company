@@ -41,19 +41,28 @@ Antes de comenzar, asegúrate de tener:
    VITE_SUPABASE_ANON_KEY=your_anon_key
    ```
 
+   d. Configurar la Base de Datos:
+   - Ve al SQL Editor en el Dashboard de Supabase
+   - Ejecuta el siguiente SQL para crear las tablas necesarias, funciones y políticas de seguridad:
+     - [Ver el SQL completo aquí](docs/schema.md)
+     - Copia y pega todo el contenido del archivo schema.md en el SQL Editor
+     - Este script creará:
+       - Enum para roles de usuario
+       - Tabla de perfiles
+       - Tabla de registros de tiempo
+       - Tabla de roles de usuario
+       - Funciones necesarias
+       - Políticas de seguridad (RLS)
+
 3. **Instalar Dependencias**
    ```bash
    npm install
    ```
 
-4. **Inicializar la Base de Datos**
-   
-   La aplicación requiere las siguientes tablas:
-   - profiles (usuarios y sus datos)
-   - time_records (registros de fichaje)
-   - user_roles (roles de usuario)
-
-   Ejecuta las migraciones necesarias desde el panel de Supabase > SQL Editor.
+4. **Iniciar el Servidor de Desarrollo**
+   ```bash
+   npm run dev
+   ```
 
 ## Desarrollo Local
 
