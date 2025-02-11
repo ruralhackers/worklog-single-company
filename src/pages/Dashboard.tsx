@@ -80,6 +80,7 @@ const Dashboard = () => {
               onNotesChange={setCustomNotes}
               onSubmit={handleCustomRecordSubmit}
               onCustomDialogOpen={openCustomDialog}
+              activeRecord={activeRecord}
             />
           }
         />

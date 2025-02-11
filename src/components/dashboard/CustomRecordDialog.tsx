@@ -25,6 +25,7 @@ interface CustomRecordDialogProps {
   onNotesChange: (value: string) => void;
   onSubmit: () => void;
   onCustomDialogOpen: (type: "in" | "out") => void;
+  activeRecord: any | null;
 }
 
 export const CustomRecordDialog = ({
@@ -40,30 +41,35 @@ export const CustomRecordDialog = ({
   onNotesChange,
   onSubmit,
   onCustomDialogOpen,
+  activeRecord,
 }: CustomRecordDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <div className="flex space-x-2">
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onCustomDialogOpen("in")}
-          >
-            Registro Personalizado de Entrada
-          </Button>
-        </DialogTrigger>
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onCustomDialogOpen("out")}
-          >
-            Registro Personalizado de Salida
-          </Button>
-        </DialogTrigger>
+        {!activeRecord && (
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => onCustomDialogOpen("in")}
+            >
+              Registro Personalizado de Entrada
+            </Button>
+          </DialogTrigger>
+        )}
+        {activeRecord && (
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => onCustomDialogOpen("out")}
+            >
+              Registro Personalizado de Salida
+            </Button>
+          </DialogTrigger>
+        )}
       </div>
       <DialogContent>
         <DialogHeader>
