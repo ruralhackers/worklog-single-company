@@ -1,5 +1,5 @@
 
-import { Clock, ClockIcon } from "lucide-react";
+import { ClockIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 
@@ -18,14 +18,6 @@ export const ClockControl = ({
 }: ClockControlProps) => {
   return (
     <div className="max-w-md mx-auto space-y-8 p-4">
-      <div className="text-center space-y-2">
-        <div className="flex justify-center">
-          <div className="glass p-4 rounded-full">
-            <Clock className="w-8 h-8 text-gray-700" />
-          </div>
-        </div>
-      </div>
-
       {activeRecord && (
         <div className="glass p-4 rounded-lg text-center">
           <p className="text-gray-600">Hora de entrada:</p>
