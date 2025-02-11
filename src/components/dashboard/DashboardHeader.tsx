@@ -1,6 +1,9 @@
 
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +17,18 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader = ({ userId, onLogout }: DashboardHeaderProps) => {
+  const { data: isAdmin } = useQuery({
+    queryKey: ["isAdmin", userId],
+    queryFn: async () => {
+      if (!userId) return false;
+      const { data: isAdmin } = await supabase.rpc("is_admin", {
+        user_uid: userId,
+      });
+      return isAdmin;
+    },
+    enabled: !!userId,
+  });
+
   return (
     <div className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -29,6 +44,14 @@ export const DashboardHeader = ({ userId, onLogout }: DashboardHeaderProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {isAdmin && (
+              <DropdownMenuItem asChild>
+                <Link to="/admin/dashboard">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Admin
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={onLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Cerrar Sesión
