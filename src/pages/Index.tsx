@@ -29,10 +29,10 @@ const Index = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       console.log("1. Intentando login con username:", username);
-      
+
       // First, get the user's email using their username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
