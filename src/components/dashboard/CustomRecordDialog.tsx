@@ -43,16 +43,28 @@ export const CustomRecordDialog = ({
 }: CustomRecordDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => onCustomDialogOpen(recordType)}
-        >
-          Registro Personalizado
-        </Button>
-      </DialogTrigger>
+      <div className="flex space-x-2">
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onCustomDialogOpen("in")}
+          >
+            Registro Personalizado de Entrada
+          </Button>
+        </DialogTrigger>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onCustomDialogOpen("out")}
+          >
+            Registro Personalizado de Salida
+          </Button>
+        </DialogTrigger>
+      </div>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>

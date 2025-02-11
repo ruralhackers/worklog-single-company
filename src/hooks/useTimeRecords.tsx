@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -87,11 +88,10 @@ export const useTimeRecords = (userId: string | null) => {
     }
   };
 
-  const handleCustomRecord = async (
+  const handleCustomClockIn = async (
     customDate: string,
     customTime: string,
     customNotes: string,
-    customRecordType: "in" | "out"
   ) => {
     if (!userId || !customDate || !customTime) return;
 
@@ -99,67 +99,21 @@ export const useTimeRecords = (userId: string | null) => {
     try {
       const timestamp = new Date(`${customDate}T${customTime}`);
 
-      if (customRecordType === "in") {
-        // Para entrada personalizada, siempre creamos un nuevo registro
-        const { error } = await supabase
-          .from('time_records')
-          .insert({
-            clock_in: timestamp.toISOString(),
-            user_id: userId,
-            is_manual: true,
-            notes: customNotes || null
-          });
-
-        if (error) throw error;
-
-        toast({
-          title: "¡Registro exitoso!",
-          description: "Has registrado tu entrada personalizada correctamente.",
+      const { error } = await supabase
+        .from('time_records')
+        .insert({
+          clock_in: timestamp.toISOString(),
+          user_id: userId,
+          is_manual: true,
+          notes: customNotes || null
         });
-      } else {
-        // Para salida personalizada
-        if (activeRecord) {
-          // Si hay registro activo, actualizamos su salida
-          const clockIn = new Date(activeRecord.clock_in);
-          
-          if (timestamp <= clockIn) {
-            throw new Error("La hora de salida debe ser posterior a la hora de entrada");
-          }
 
-          const { error } = await supabase
-            .from('time_records')
-            .update({
-              clock_out: timestamp.toISOString(),
-              is_manual: true,
-              notes: customNotes || null
-            })
-            .eq('id', activeRecord.id);
+      if (error) throw error;
 
-          if (error) throw error;
-
-          toast({
-            title: "¡Registro exitoso!",
-            description: "Has registrado tu salida personalizada correctamente.",
-          });
-        } else {
-          // Si no hay registro activo, creamos uno nuevo solo con entrada
-          const { error } = await supabase
-            .from('time_records')
-            .insert({
-              clock_in: timestamp.toISOString(),
-              user_id: userId,
-              is_manual: true,
-              notes: customNotes || null
-            });
-
-          if (error) throw error;
-
-          toast({
-            title: "¡Registro exitoso!",
-            description: "Has creado un nuevo registro de entrada personalizado.",
-          });
-        }
-      }
+      toast({
+        title: "¡Registro exitoso!",
+        description: "Has registrado tu entrada personalizada correctamente.",
+      });
 
       await checkActiveRecord();
     } catch (error: any) {
@@ -170,6 +124,71 @@ export const useTimeRecords = (userId: string | null) => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCustomClockOut = async (
+    customDate: string,
+    customTime: string,
+    customNotes: string,
+  ) => {
+    if (!userId || !customDate || !customTime) return;
+    if (!activeRecord) {
+      toast({
+        title: "Error",
+        description: "No hay un registro activo para registrar la salida",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const timestamp = new Date(`${customDate}T${customTime}`);
+      const clockIn = new Date(activeRecord.clock_in);
+      
+      if (timestamp <= clockIn) {
+        throw new Error("La hora de salida debe ser posterior a la hora de entrada");
+      }
+
+      const { error } = await supabase
+        .from('time_records')
+        .update({
+          clock_out: timestamp.toISOString(),
+          is_manual: true,
+          notes: customNotes || null
+        })
+        .eq('id', activeRecord.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "¡Registro exitoso!",
+        description: "Has registrado tu salida personalizada correctamente.",
+      });
+
+      await checkActiveRecord();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ha ocurrido un error al registrar",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCustomRecord = async (
+    customDate: string,
+    customTime: string,
+    customNotes: string,
+    customRecordType: "in" | "out"
+  ) => {
+    if (customRecordType === "in") {
+      await handleCustomClockIn(customDate, customTime, customNotes);
+    } else {
+      await handleCustomClockOut(customDate, customTime, customNotes);
     }
   };
 
