@@ -1,12 +1,12 @@
 
-# Creating the First Admin User
+# Creación del Primer Usuario Administrador
 
-After setting up your database and creating a new user through the application's signup process, you'll need to manually assign the admin role to create the first administrator. Follow these steps:
+Después de configurar la base de datos y crear un nuevo usuario a través del proceso de registro de la aplicación, necesitarás asignar manualmente el rol de administrador para crear el primer administrador. Sigue estos pasos:
 
-1. First, sign up for a new account through the application
-2. Note down the email you used to sign up
-3. Go to the SQL Editor in your Supabase Dashboard
-4. Run the following SQL query, replacing `'user@example.com'` with your actual email:
+1. Primero, regístrate para obtener una nueva cuenta a través de la aplicación
+2. Anota el correo electrónico que usaste para registrarte
+3. Ve al Editor SQL en tu Dashboard de Supabase
+4. Ejecuta la siguiente consulta SQL, reemplazando `'usuario@ejemplo.com'` con tu correo electrónico real:
 
 ```sql
 UPDATE user_roles 
@@ -14,27 +14,27 @@ SET role = 'admin'
 WHERE user_id = (
     SELECT id 
     FROM auth.users 
-    WHERE email = 'user@example.com'
+    WHERE email = 'usuario@ejemplo.com'
 );
 ```
 
-This will promote the specified user to an admin role. After this, you can use the application's admin interface to manage other users' roles.
+Esto promoverá al usuario especificado a un rol de administrador. Después de esto, podrás usar la interfaz de administración de la aplicación para gestionar los roles de otros usuarios.
 
-## Alternative Method
+## Método Alternativo
 
-If you know the user's UUID directly, you can use this query instead:
+Si conoces directamente el UUID del usuario, puedes usar esta consulta:
 
 ```sql
 UPDATE user_roles 
 SET role = 'admin' 
-WHERE user_id = 'YOUR-USER-UUID';
+WHERE user_id = 'TU-UUID-DE-USUARIO';
 ```
 
-Replace `'YOUR-USER-UUID'` with the actual UUID of the user you want to make an admin.
+Reemplaza `'TU-UUID-DE-USUARIO'` con el UUID real del usuario que quieres hacer administrador.
 
-## Verification
+## Verificación
 
-To verify the change, you can run:
+Para verificar el cambio, puedes ejecutar:
 
 ```sql
 SELECT 
@@ -45,4 +45,5 @@ JOIN user_roles ur ON au.id = ur.user_id
 WHERE ur.role = 'admin';
 ```
 
-This will show you all users with admin privileges.
+Esto te mostrará todos los usuarios con privilegios de administrador.
+
