@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -118,7 +117,7 @@ export const useTimeRecords = (userId: string | null) => {
           description: "Has registrado tu entrada personalizada correctamente.",
         });
       } else {
-        // Para salida personalizada, verificamos si hay un registro activo
+        // Para salida personalizada
         if (activeRecord) {
           // Si hay registro activo, actualizamos su salida
           const clockIn = new Date(activeRecord.clock_in);
@@ -140,7 +139,7 @@ export const useTimeRecords = (userId: string | null) => {
 
           toast({
             title: "¡Registro exitoso!",
-            description: "Has actualizado la salida del registro activo correctamente.",
+            description: "Has registrado tu salida personalizada correctamente.",
           });
         } else {
           // Si no hay registro activo, creamos uno nuevo solo con entrada
