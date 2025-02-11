@@ -38,10 +38,17 @@ export const useTimeRecords = (userId: string | null) => {
     try {
       if (activeRecord) {
         // Clock out
+        const clockOut = new Date();
+        const clockIn = new Date(activeRecord.clock_in);
+
+        if (clockOut <= clockIn) {
+          throw new Error("La hora de salida debe ser posterior a la hora de entrada");
+        }
+
         const { error } = await supabase
           .from('time_records')
           .update({ 
-            clock_out: new Date().toISOString(),
+            clock_out: clockOut.toISOString(),
             user_id: userId
           })
           .eq('id', activeRecord.id);
@@ -91,13 +98,13 @@ export const useTimeRecords = (userId: string | null) => {
 
     setIsLoading(true);
     try {
-      const timestamp = new Date(`${customDate}T${customTime}`).toISOString();
+      const timestamp = new Date(`${customDate}T${customTime}`);
 
       if (customRecordType === "in") {
         const { error } = await supabase
           .from('time_records')
           .insert({
-            clock_in: timestamp,
+            clock_in: timestamp.toISOString(),
             user_id: userId,
             is_manual: true,
             notes: customNotes || null
@@ -114,10 +121,15 @@ export const useTimeRecords = (userId: string | null) => {
           throw new Error("No hay un registro de entrada activo");
         }
 
+        const clockIn = new Date(activeRecord.clock_in);
+        if (timestamp <= clockIn) {
+          throw new Error("La hora de salida debe ser posterior a la hora de entrada");
+        }
+
         const { error } = await supabase
           .from('time_records')
           .update({ 
-            clock_out: timestamp,
+            clock_out: timestamp.toISOString(),
             is_manual: true,
             notes: customNotes || null,
             user_id: userId

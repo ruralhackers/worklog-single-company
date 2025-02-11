@@ -26,14 +26,19 @@ const TimeRecordsTable = ({ timeRecords, username }: TimeRecordsTableProps) => {
     try {
       // Preparar los datos para la exportación
       const data = timeRecords.map((record) => {
-        const duration = record.clock_out
-          ? ((new Date(record.clock_out).getTime() - new Date(record.clock_in).getTime()) / (1000 * 60 * 60)).toFixed(2)
-          : "En curso";
+        const clockIn = new Date(record.clock_in);
+        const clockOut = record.clock_out ? new Date(record.clock_out) : null;
+        
+        let duration = "En curso";
+        if (clockOut && clockOut > clockIn) {
+          const hours = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60);
+          duration = `${hours.toFixed(2)} horas`;
+        }
 
         return {
-          "Fecha de Entrada": new Date(record.clock_in).toLocaleString(),
-          "Fecha de Salida": record.clock_out ? new Date(record.clock_out).toLocaleString() : "En curso",
-          "Duración (horas)": duration,
+          "Fecha de Entrada": clockIn.toLocaleString(),
+          "Fecha de Salida": clockOut ? clockOut.toLocaleString() : "En curso",
+          "Duración": duration,
           "Notas": record.notes || "-"
         };
       });
@@ -63,6 +68,18 @@ const TimeRecordsTable = ({ timeRecords, username }: TimeRecordsTableProps) => {
     }
   };
 
+  const calculateDuration = (clockIn: string, clockOut: string | null) => {
+    if (!clockOut) return "En curso";
+    
+    const start = new Date(clockIn);
+    const end = new Date(clockOut);
+    
+    if (end <= start) return "Error en fechas";
+    
+    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    return `${hours.toFixed(2)} horas`;
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -88,28 +105,22 @@ const TimeRecordsTable = ({ timeRecords, username }: TimeRecordsTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {timeRecords?.map((record) => {
-              const duration = record.clock_out
-                ? ((new Date(record.clock_out).getTime() - new Date(record.clock_in).getTime()) / (1000 * 60 * 60)).toFixed(2)
-                : "En curso";
-
-              return (
-                <TableRow key={record.id}>
-                  <TableCell>
-                    {new Date(record.clock_in).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    {record.clock_out
-                      ? new Date(record.clock_out).toLocaleString()
-                      : "En curso"}
-                  </TableCell>
-                  <TableCell>
-                    {duration} {duration !== "En curso" ? "horas" : ""}
-                  </TableCell>
-                  <TableCell>{record.notes || "-"}</TableCell>
-                </TableRow>
-              );
-            })}
+            {timeRecords?.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell>
+                  {new Date(record.clock_in).toLocaleString()}
+                </TableCell>
+                <TableCell>
+                  {record.clock_out
+                    ? new Date(record.clock_out).toLocaleString()
+                    : "En curso"}
+                </TableCell>
+                <TableCell>
+                  {calculateDuration(record.clock_in, record.clock_out)}
+                </TableCell>
+                <TableCell>{record.notes || "-"}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </CardContent>
@@ -118,3 +129,4 @@ const TimeRecordsTable = ({ timeRecords, username }: TimeRecordsTableProps) => {
 };
 
 export default TimeRecordsTable;
+
