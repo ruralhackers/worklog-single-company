@@ -16,7 +16,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   // Detectar si estamos en entorno de prueba usando la URL del proyecto
-  const isTestEnvironment = process.env.NODE_ENV !== 'production';
+  const isTestEnvironment = import.meta.env.MODE !== 'production';
 
   useEffect(() => {
     checkAuth();
