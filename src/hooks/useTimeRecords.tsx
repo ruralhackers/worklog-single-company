@@ -101,6 +101,7 @@ export const useTimeRecords = (userId: string | null) => {
       const timestamp = new Date(`${customDate}T${customTime}`);
 
       if (customRecordType === "in") {
+        // Para entrada personalizada, siempre creamos un nuevo registro
         const { error } = await supabase
           .from('time_records')
           .insert({
@@ -117,18 +118,9 @@ export const useTimeRecords = (userId: string | null) => {
           description: "Has registrado tu entrada personalizada correctamente.",
         });
       } else {
-        // Para salida personalizada, primero verificamos si hay un registro activo
-        const { data: activeRecords } = await supabase
-          .from('time_records')
-          .select('*')
-          .eq('user_id', userId)
-          .is('clock_out', null)
-          .order('clock_in', { ascending: false })
-          .limit(1);
-
-        if (activeRecords && activeRecords.length > 0) {
-          // Si hay un registro activo, actualizamos su salida
-          const activeRecord = activeRecords[0];
+        // Para salida personalizada, verificamos si hay un registro activo
+        if (activeRecord) {
+          // Si hay registro activo, actualizamos su salida
           const clockIn = new Date(activeRecord.clock_in);
           
           if (timestamp <= clockIn) {
@@ -145,25 +137,29 @@ export const useTimeRecords = (userId: string | null) => {
             .eq('id', activeRecord.id);
 
           if (error) throw error;
+
+          toast({
+            title: "¡Registro exitoso!",
+            description: "Has actualizado la salida del registro activo correctamente.",
+          });
         } else {
-          // Si no hay registro activo, creamos uno nuevo con entrada y salida
+          // Si no hay registro activo, creamos uno nuevo solo con entrada
           const { error } = await supabase
             .from('time_records')
             .insert({
               clock_in: timestamp.toISOString(),
-              clock_out: timestamp.toISOString(),
               user_id: userId,
               is_manual: true,
               notes: customNotes || null
             });
 
           if (error) throw error;
-        }
 
-        toast({
-          title: "¡Registro exitoso!",
-          description: "Has registrado tu salida personalizada correctamente.",
-        });
+          toast({
+            title: "¡Registro exitoso!",
+            description: "Has creado un nuevo registro de entrada personalizado.",
+          });
+        }
       }
 
       await checkActiveRecord();
