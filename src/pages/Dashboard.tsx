@@ -8,6 +8,7 @@ import { CustomRecordDialog } from "@/components/dashboard/CustomRecordDialog";
 import { useTimeRecords } from "@/hooks/useTimeRecords";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { Clock } from "lucide-react";
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from "@/components/ui/table";
 
 const Dashboard = () => {
@@ -97,9 +98,17 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <DashboardHeader userId={userId} onLogout={handleLogout} />
       <div className="container mx-auto pt-8 space-y-8 pb-8">
-        <h2 className="text-center text-xl text-gray-700">
-          {getWelcomeMessage()}
-        </h2>
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="glass p-4 rounded-full">
+              <Clock className="w-8 h-8 text-gray-700" />
+            </div>
+          </div>
+          <h2 className="text-xl text-gray-700">
+            {getWelcomeMessage()}
+          </h2>
+        </div>
+
         <ClockControl
           activeRecord={activeRecord}
           isLoading={isLoading}
