@@ -27,7 +27,7 @@ Antes de comenzar, asegúrate de tener:
    cd time-tracking-app
    ```
 
-2. **Configurar Supabase**
+2. **Crear y Configurar Supabase**
    
    a. Crear un nuevo proyecto en [Supabase](https://supabase.com)
    
@@ -43,16 +43,30 @@ Antes de comenzar, asegúrate de tener:
 
    d. Configurar la Base de Datos:
    - Ve al SQL Editor en el Dashboard de Supabase
-   - Ejecuta el siguiente SQL para crear las tablas necesarias, funciones y políticas de seguridad:
-     - [Ver el SQL completo aquí](docs/schema.md)
-     - Copia y pega todo el contenido del archivo schema.md en el SQL Editor
-     - Este script creará:
-       - Enum para roles de usuario
-       - Tabla de perfiles
-       - Tabla de registros de tiempo
-       - Tabla de roles de usuario
-       - Funciones necesarias
-       - Políticas de seguridad (RLS)
+   - Localiza el archivo `docs/init_db.sql` en el repositorio
+   - Copia todo su contenido y pégalo en el SQL Editor de Supabase
+   - Ejecuta el script completo
+   - Este script creará:
+     - Enum para roles de usuario
+     - Tabla de perfiles
+     - Tabla de registros de tiempo
+     - Tabla de roles de usuario
+     - Funciones necesarias
+     - Políticas de seguridad (RLS)
+
+   e. Crear el Primer Usuario:
+   - Registra un nuevo usuario a través de la aplicación
+   - Ve al SQL Editor en Supabase
+   - Ejecuta el siguiente SQL (reemplaza el email con el que usaste para registrarte):
+     ```sql
+     UPDATE user_roles 
+     SET role = 'admin' 
+     WHERE user_id = (
+         SELECT id 
+         FROM auth.users 
+         WHERE email = 'tu.email@ejemplo.com'
+     );
+     ```
 
 3. **Instalar Dependencias**
    ```bash
