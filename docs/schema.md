@@ -183,6 +183,12 @@ CREATE POLICY "Admins can update all time records"
 ON time_records FOR UPDATE
 TO authenticated
 USING (is_admin(auth.uid()));
+
+-- Admins can delete time records
+CREATE POLICY "Admins can delete time records"
+ON time_records FOR DELETE
+TO authenticated
+USING (is_admin(auth.uid()));
 ```
 
 ### User Roles Table
@@ -209,3 +215,4 @@ TO authenticated
 USING (is_admin(auth.uid()))
 WITH CHECK (is_admin(auth.uid()));
 ```
+
