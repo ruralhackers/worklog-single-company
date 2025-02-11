@@ -9,10 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 
 const Signup = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -87,9 +86,15 @@ const Signup = () => {
         return;
       }
 
+      // Sign up with username instead of email
       const { data: { user }, error } = await supabase.auth.signUp({
-        email,
+        email: `${username}@example.com`,
         password,
+        options: {
+          data: {
+            username,
+          }
+        }
       });
 
       if (error) {
@@ -115,7 +120,7 @@ const Signup = () => {
 
       toast({
         title: "¡Registro exitoso!",
-        description: "Por favor, verifica tu correo electrónico.",
+        description: "Tu cuenta ha sido creada exitosamente.",
       });
       
       navigate('/');
@@ -149,22 +154,6 @@ const Signup = () => {
 
         <div className="glass p-8 space-y-6 animate-slide-in">
           <form onSubmit={handleSignUp} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Correo electrónico
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                className="input-field w-full"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@empresa.com"
-                disabled={isLoading}
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium text-gray-700">
                 Nombre de usuario

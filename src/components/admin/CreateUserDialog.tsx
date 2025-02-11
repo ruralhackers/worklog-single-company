@@ -23,9 +23,8 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
 
@@ -67,10 +66,15 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
         return;
       }
 
-      // Create the user in Supabase Auth
+      // Create the user in Supabase Auth with username
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: `${username}@example.com`,
         password,
+        options: {
+          data: {
+            username,
+          }
+        }
       });
 
       if (signUpError) throw signUpError;
@@ -107,9 +111,8 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
       });
 
       // Reset form and close dialog
-      setEmail("");
-      setPassword("");
       setUsername("");
+      setPassword("");
       setIsAdmin(false);
       onOpenChange(false);
 
@@ -134,16 +137,6 @@ const CreateUserDialog = ({ open, onOpenChange }: CreateUserDialogProps) => {
           <DialogTitle>Crear nuevo usuario</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Correo electrónico</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
           <div className="space-y-2">
             <Label htmlFor="username">Nombre de usuario</Label>
             <Input
