@@ -101,6 +101,17 @@ export const useTimeRecords = (userId: string | null) => {
       const timestamp = new Date(`${customDate}T${customTime}`);
 
       if (customRecordType === "in") {
+        // Verificar si ya existe un registro activo
+        const { data: existingRecords } = await supabase
+          .from('time_records')
+          .select('*')
+          .eq('user_id', userId)
+          .is('clock_out', null);
+
+        if (existingRecords && existingRecords.length > 0) {
+          throw new Error("Ya tienes un registro activo. Debes registrar la salida primero.");
+        }
+
         const { error } = await supabase
           .from('time_records')
           .insert({
@@ -131,10 +142,10 @@ export const useTimeRecords = (userId: string | null) => {
           .update({ 
             clock_out: timestamp.toISOString(),
             is_manual: true,
-            notes: customNotes || null,
-            user_id: userId
+            notes: customNotes || null
           })
-          .eq('id', activeRecord.id);
+          .eq('id', activeRecord.id)
+          .is('clock_out', null); // Asegurarse de que solo actualiza registros sin salida
 
         if (error) throw error;
 
