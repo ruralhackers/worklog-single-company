@@ -17,12 +17,12 @@ import { UserPlus, ExternalLink } from "lucide-react";
 import CreateUserDialog from "@/components/admin/CreateUserDialog";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
-interface UserRole {
-  role: 'admin' | 'user';
-}
-
 interface TimeRecordCount {
   count: number;
+}
+
+interface UserRole {
+  role: 'admin' | 'user';
 }
 
 interface Profile {
@@ -31,6 +31,14 @@ interface Profile {
   updated_at: string | null;
   user_roles: UserRole[];
   time_records: TimeRecordCount[];
+}
+
+interface DatabaseProfile {
+  id: string;
+  username: string | null;
+  updated_at: string | null;
+  user_roles: { role: 'admin' | 'user' }[];
+  time_records: { count: number }[];
 }
 
 const AdminDashboard = () => {
@@ -62,7 +70,7 @@ const AdminDashboard = () => {
   const { data: users, isLoading } = useQuery<Profile[]>({
     queryKey: ["users"],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select(`
           id,
@@ -77,7 +85,12 @@ const AdminDashboard = () => {
         throw error;
       }
 
-      return profiles;
+      // Transform the data to match our Profile interface
+      return (data as DatabaseProfile[]).map(profile => ({
+        ...profile,
+        user_roles: profile.user_roles,
+        time_records: profile.time_records
+      }));
     },
     enabled: !!user,
   });
