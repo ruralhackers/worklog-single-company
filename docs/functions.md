@@ -6,49 +6,42 @@ This document outlines the Supabase database functions.
 ## Admin Check Function
 ```sql
 CREATE OR REPLACE FUNCTION public.is_admin(user_uid uuid)
- RETURNS boolean
- LANGUAGE sql
- SECURITY DEFINER
-AS $function$
+RETURNS boolean AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.user_roles
     WHERE user_id = user_uid
     AND role = 'admin'::user_role
   );
-$function$
+$$ LANGUAGE sql SECURITY DEFINER;
 ```
 
 ## New User Handler
 ```sql
 CREATE OR REPLACE FUNCTION public.handle_new_user()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
+RETURNS trigger AS $$
 begin
-  -- Create the profile without username (will be set later)
-  INSERT INTO public.profiles (id)
-  VALUES (new.id);
+  -- Create the profile record
+  INSERT INTO public.profiles (id, username, email)
+  VALUES (
+    new.id, 
+    COALESCE(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
+    new.email
+  );
   
   -- Create default user role
   INSERT INTO public.user_roles (user_id, role)
   VALUES (new.id, 'user');
   
-  RETURN new;
+  return new;
 end;
-$function$
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 ```
 
 ## User Email Getter
 ```sql
 CREATE OR REPLACE FUNCTION public.get_user_email(admin_uid uuid, target_user_id uuid)
- RETURNS text
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
+RETURNS text AS $$
 DECLARE
   is_admin BOOLEAN;
   user_email text;
@@ -71,17 +64,13 @@ BEGIN
 
   RETURN user_email;
 END;
-$function$
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 ```
 
 ## User Credentials Updater
 ```sql
-CREATE OR REPLACE FUNCTION public.update_user_credentials(admin_uid uuid, target_user_id uuid, new_email text DEFAULT NULL::text, new_password text DEFAULT NULL::text)
- RETURNS boolean
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
+CREATE OR REPLACE FUNCTION public.update_user_credentials(admin_uid uuid, target_user_id uuid, new_email text DEFAULT NULL, new_password text DEFAULT NULL)
+RETURNS boolean AS $$
 DECLARE
   is_admin BOOLEAN;
 BEGIN
@@ -113,5 +102,5 @@ BEGIN
 
   RETURN TRUE;
 END;
-$function$
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 ```
