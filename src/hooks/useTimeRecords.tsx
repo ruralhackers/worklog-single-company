@@ -128,26 +128,47 @@ export const useTimeRecords = (userId: string | null) => {
           description: "Has registrado tu entrada personalizada correctamente.",
         });
       } else {
-        if (!activeRecord) {
-          throw new Error("No hay un registro de entrada activo");
-        }
-
-        const clockIn = new Date(activeRecord.clock_in);
-        if (timestamp <= clockIn) {
-          throw new Error("La hora de salida debe ser posterior a la hora de entrada");
-        }
-
-        const { error } = await supabase
+        // Para salida personalizada, buscamos el último registro sin salida
+        const { data: lastRecord } = await supabase
           .from('time_records')
-          .update({ 
-            clock_out: timestamp.toISOString(),
-            is_manual: true,
-            notes: customNotes || null
-          })
-          .eq('id', activeRecord.id)
-          .is('clock_out', null); // Asegurarse de que solo actualiza registros sin salida
+          .select('*')
+          .eq('user_id', userId)
+          .is('clock_out', null)
+          .order('clock_in', { ascending: false })
+          .limit(1);
 
-        if (error) throw error;
+        // Si hay un registro activo, actualizamos su salida
+        if (lastRecord && lastRecord.length > 0) {
+          const clockIn = new Date(lastRecord[0].clock_in);
+          if (timestamp <= clockIn) {
+            throw new Error("La hora de salida debe ser posterior a la hora de entrada");
+          }
+
+          const { error } = await supabase
+            .from('time_records')
+            .update({ 
+              clock_out: timestamp.toISOString(),
+              is_manual: true,
+              notes: customNotes || null
+            })
+            .eq('id', lastRecord[0].id)
+            .is('clock_out', null);
+
+          if (error) throw error;
+        } else {
+          // Si no hay registro activo, creamos uno nuevo con salida
+          const { error } = await supabase
+            .from('time_records')
+            .insert({
+              clock_in: timestamp.toISOString(), // Usamos la misma hora como entrada
+              clock_out: timestamp.toISOString(),
+              user_id: userId,
+              is_manual: true,
+              notes: customNotes || null
+            });
+
+          if (error) throw error;
+        }
 
         toast({
           title: "¡Registro exitoso!",
